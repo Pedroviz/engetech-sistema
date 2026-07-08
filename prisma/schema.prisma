@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Cliente {
+  id            String   @id @default(cuid())
+  nome          String
+  segmento      String
+  whatsapp      String?
+  email         String?
+  classificacao String
+  clienteDesde  String?
+  observacoes   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  obras         Obra[]
+  orcamentos    Orcamento[]
+}
+
+model Obra {
+  id              String            @id @default(cuid())
+  centroCusto     String            @unique
+  clienteId       String
+  cliente         Cliente           @relation(fields: [clienteId], references: [id])
+  tipo            String
+  status          String
+  inicio          DateTime
+  previsaoFim     DateTime
+  contrato        Float
+  orcamentoMat    Float
+  orcamentoMO     Float
+  gastoMat        Float             @default(0)
+  gastoMO         Float             @default(0)
+  gastoEsporadico Float             @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  diaristas       Diarista[]
+  pagamentos      Pagamento[]
+  materiais       Material[]
+  gastos          GastoEsporadico[]
+  lancamentos     Lancamento[]
+  etapas          Etapa[]
+  ocorrencias     Ocorrencia[]
+}
+
+model Fornecedor {
+  id            String     @id @default(cuid())
+  razaoSocial   String
+  cnpj          String     @unique
+  categoria     String
+  pedidoMinimo  Float      @default(0)
+  telefone      String?
+  email         String?
+  vendedor      String?
+  condicaoPagto String?
+  endereco      String?
+  cidade        String?
+  materiais     String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  itens         Material[]
+}
+
+model Orcamento {
+  id          String   @id @default(cuid())
+  numero      String   @unique
+  clienteId   String
+  cliente     Cliente  @relation(fields: [clienteId], references: [id])
+  valor       Float
+  status      String   // enviado, negociacao, aprovado, recusado, expirado
+  linkArquivo String?
+  observacoes String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Diarista {
+  id         String     @id @default(cuid())
+  nome       String
+  funcao     String
+  telefone   String?
+  obraId     String
+  obra       Obra       @relation(fields: [obraId], references: [id])
+  createdAt  DateTime   @default(now())
+  pagamentos Pagamento[]
+}
+
+model Pagamento {
+  id         String   @id @default(cuid())
+  diaristaId String
+  diarista   Diarista @relation(fields: [diaristaId], references: [id])
+  obraId     String
+  obra       Obra     @relation(fields: [obraId], references: [id])
+  diasTrab   Int
+  valorDia   Float
+  total      Float
+  status     String   @default("pendente")
+  createdAt  DateTime @default(now())
+}
+
+model Material {
+  id          String   @id @default(cuid())
+  nome        String
+  obraId      String
+  obra        Obra     @relation(fields: [obraId], references: [id])
+  fornecedorId String?
+  fornecedor  Fornecedor? @relation(fields: [fornecedorId], references: [id])
+  orcado      Float
+  utilizado   Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GastoEsporadico {
+  id           String   @id @default(cuid())
+  descricao    String
+  justificativa String
+  obraId       String
+  obra         Obra     @relation(fields: [obraId], references: [id])
+  valor        Float
+  data         DateTime @default(now())
+  createdAt    DateTime @default(now())
+}
+
+model Lancamento {
+  id        String   @id @default(cuid())
+  descricao String
+  obraId    String
+  obra      Obra     @relation(fields: [obraId], references: [id])
+  tipo      String   // entrada, saida
+  categoria String   // recebimento, material, mao_obra, esporadico
+  valor     Float
+  data      DateTime @default(now())
+  createdAt DateTime @default(now())
+}
+
+model Etapa {
+  id          String      @id @default(cuid())
+  obraId      String
+  obra        Obra        @relation(fields: [obraId], references: [id])
+  nome        String
+  ordem       Int
+  status      String      @default("pendente")
+  percentual  Int         @default(0)
+  inicioPlano DateTime
+  fimPlano    DateTime
+  inicioReal  DateTime?
+  fimReal     DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  subtarefas  Subtarefa[]
+}
+
+model Subtarefa {
+  id         String   @id @default(cuid())
+  etapaId    String
+  etapa      Etapa    @relation(fields: [etapaId], references: [id])
+  nome       String
+  status     String   @default("pendente")
+  percentual Int      @default(0)
+  motivo     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Ocorrencia {
+  id        String   @id @default(cuid())
+  obraId    String
+  obra      Obra     @relation(fields: [obraId], references: [id])
+  etapaId   String?
+  causa     String
+  descricao String
+  diasAtraso Int     @default(0)
+  data      DateTime @default(now())
+  createdAt DateTime @default(now())
+}
