@@ -68,6 +68,8 @@ export default function OrcamentosPage() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [filtroStatus, setFiltroStatus] = useState("todos");
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [convertendo, setConvertendo] = useState<Orcamento | null>(null);
   const [erroConversao, setErroConversao] = useState("");
 
@@ -89,35 +91,23 @@ export default function OrcamentosPage() {
     orcamentoMO: "",
   });
 
-  async function fetchData() {
+  async function loadData() {
     const [oRes, cRes] = await Promise.all([
       fetch("/api/orcamentos"),
       fetch("/api/clientes"),
     ]);
     const oData = await oRes.json();
     const cData = await cRes.json();
-    return {
-      orcamentos: Array.isArray(oData) ? oData : [],
-      clientes: Array.isArray(cData) ? cData : [],
-    };
-  }
-
-  async function loadData() {
-    const { orcamentos: loadedOrcamentos, clientes: loadedClientes } =
-      await fetchData();
-    setOrcamentos(loadedOrcamentos);
-    setClientes(loadedClientes);
+    setOrcamentos(Array.isArray(oData) ? oData : []);
+    setClientes(Array.isArray(cData) ? cData : []);
     setLoading(false);
   }
 
   useEffect(() => {
-    fetchData().then(
-      ({ orcamentos: loadedOrcamentos, clientes: loadedClientes }) => {
-        setOrcamentos(loadedOrcamentos);
-        setClientes(loadedClientes);
-        setLoading(false);
-      },
-    );
+    async function loadInitialData() {
+      await loadData();
+    }
+    loadInitialData();
   }, []);
 
   function handleChange(
@@ -126,14 +116,23 @@ export default function OrcamentosPage() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    await fetch("/api/orcamentos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, valor: Number(form.valor) }),
+  function abrirEdicao(orc: Orcamento) {
+    setEditandoId(orc.id);
+    setForm({
+      numero: orc.numero,
+      clienteId: orc.cliente?.id || "",
+      valor: String(orc.valor),
+      status: orc.status,
+      linkArquivo: orc.linkArquivo || "",
+      observacoes: orc.observacoes || "",
     });
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelarForm() {
+    setShowForm(false);
+    setEditandoId(null);
     setForm({
       numero: "",
       clienteId: "",
@@ -142,8 +141,34 @@ export default function OrcamentosPage() {
       linkArquivo: "",
       observacoes: "",
     });
-    setShowForm(false);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+
+    if (editandoId) {
+      await fetch(`/api/orcamentos/${editandoId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, valor: Number(form.valor) }),
+      });
+    } else {
+      await fetch("/api/orcamentos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, valor: Number(form.valor) }),
+      });
+    }
+
+    cancelarForm();
     setSaving(false);
+    loadData();
+  }
+
+  async function excluirOrcamento(id: string) {
+    await fetch(`/api/orcamentos/${id}`, { method: "DELETE" });
+    setConfirmDelete(null);
     loadData();
   }
 
@@ -182,7 +207,6 @@ export default function OrcamentosPage() {
     });
 
     const data = await res.json();
-
     if (!res.ok) {
       setErroConversao(data.error || "Erro ao converter");
       setSaving(false);
@@ -219,7 +243,7 @@ export default function OrcamentosPage() {
 
   return (
     <div>
-      {/* Modal de conversão */}
+      {/* Modal converter em obra */}
       {convertendo && (
         <div
           style={{
@@ -255,7 +279,6 @@ export default function OrcamentosPage() {
                 {formatMoney(convertendo.valor)}
               </strong>
             </p>
-
             {erroConversao && (
               <div
                 style={{
@@ -271,7 +294,6 @@ export default function OrcamentosPage() {
                 ⚠ {erroConversao}
               </div>
             )}
-
             <form onSubmit={handleConverter}>
               <div
                 style={{
@@ -374,7 +396,6 @@ export default function OrcamentosPage() {
                   />
                 </div>
               </div>
-
               <div style={{ display: "flex", gap: "10px", marginTop: "18px" }}>
                 <button
                   type="submit"
@@ -411,6 +432,76 @@ export default function OrcamentosPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal excluir */}
+      {confirmDelete && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 999,
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "12px",
+              padding: "28px 32px",
+              width: "360px",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
+            }}
+          >
+            <div style={{ fontSize: "20px", marginBottom: "8px" }}>🗑️</div>
+            <h3
+              style={{ fontSize: "15px", fontWeight: 600, marginBottom: "8px" }}
+            >
+              Excluir orçamento?
+            </h3>
+            <p
+              style={{ fontSize: "13px", color: "#888", marginBottom: "20px" }}
+            >
+              Esta ação não pode ser desfeita.
+            </p>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                onClick={() => excluirOrcamento(confirmDelete)}
+                style={{
+                  background: "#E24B4A",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "9px 20px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                Sim, excluir
+              </button>
+              <button
+                onClick={() => setConfirmDelete(null)}
+                style={{
+                  background: "#f5f5f3",
+                  color: "#666",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "8px",
+                  padding: "9px 20px",
+                  fontSize: "13px",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -581,7 +672,6 @@ export default function OrcamentosPage() {
                       >
                         {o.numero}
                       </div>
-                      {/* Botão converter — só aparece em aprovados */}
                       {o.status === "aprovado" && (
                         <button
                           onClick={() => abrirConversao(o)}
@@ -642,9 +732,12 @@ export default function OrcamentosPage() {
           ))}
         </div>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            cancelarForm();
+            setShowForm(!showForm);
+          }}
           style={{
-            background: "#185FA5",
+            background: showForm ? "#888" : "#185FA5",
             color: "#fff",
             border: "none",
             borderRadius: "8px",
@@ -673,7 +766,7 @@ export default function OrcamentosPage() {
           <h3
             style={{ fontSize: "14px", fontWeight: 600, marginBottom: "16px" }}
           >
-            Cadastrar Orçamento
+            {editandoId ? "✏️ Editar Orçamento" : "Cadastrar Orçamento"}
           </h3>
           <form onSubmit={handleSubmit}>
             <div
@@ -691,7 +784,11 @@ export default function OrcamentosPage() {
                   onChange={handleChange}
                   required
                   placeholder="Ex: 0180/2025"
-                  style={inp}
+                  disabled={!!editandoId}
+                  style={{
+                    ...inp,
+                    background: editandoId ? "#f5f5f3" : "#fff",
+                  }}
                 />
               </div>
               <div>
@@ -761,24 +858,45 @@ export default function OrcamentosPage() {
                 />
               </div>
             </div>
-            <button
-              type="submit"
-              disabled={saving}
-              style={{
-                marginTop: "16px",
-                background: saving ? "#93c0e8" : "#185FA5",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                padding: "10px 20px",
-                fontSize: "13px",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "inherit",
-              }}
-            >
-              {saving ? "Salvando..." : "Salvar Orçamento"}
-            </button>
+            <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+              <button
+                type="submit"
+                disabled={saving}
+                style={{
+                  background: saving ? "#93c0e8" : "#185FA5",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "10px 20px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                {saving
+                  ? "Salvando..."
+                  : editandoId
+                    ? "Salvar alterações"
+                    : "Salvar Orçamento"}
+              </button>
+              <button
+                type="button"
+                onClick={cancelarForm}
+                style={{
+                  background: "#f5f5f3",
+                  color: "#666",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "8px",
+                  padding: "10px 20px",
+                  fontSize: "13px",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
           </form>
         </div>
       )}
@@ -826,7 +944,7 @@ export default function OrcamentosPage() {
                   "Status",
                   "Observações",
                   "Arquivo",
-                  "Ação",
+                  "Ações",
                 ].map((h) => (
                   <th
                     key={h}
@@ -902,7 +1020,7 @@ export default function OrcamentosPage() {
                         borderBottom: "1px solid #f0f0f0",
                         color: "#888",
                         fontSize: "12px",
-                        maxWidth: "160px",
+                        maxWidth: "140px",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
@@ -934,9 +1052,7 @@ export default function OrcamentosPage() {
                           Abrir ↗
                         </a>
                       ) : (
-                        <span style={{ color: "#ccc", fontSize: "12px" }}>
-                          —
-                        </span>
+                        <span style={{ color: "#ccc" }}>—</span>
                       )}
                     </td>
                     <td
@@ -948,10 +1064,12 @@ export default function OrcamentosPage() {
                       <div
                         style={{
                           display: "flex",
-                          gap: "6px",
+                          gap: "5px",
+                          flexWrap: "wrap",
                           alignItems: "center",
                         }}
                       >
+                        {/* Mudar status */}
                         <select
                           defaultValue={o.status}
                           onChange={(e) =>
@@ -960,7 +1078,7 @@ export default function OrcamentosPage() {
                           style={{
                             border: "1px solid #e0e0e0",
                             borderRadius: "6px",
-                            padding: "4px 8px",
+                            padding: "4px 6px",
                             fontSize: "11px",
                             fontFamily: "inherit",
                             cursor: "pointer",
@@ -973,6 +1091,44 @@ export default function OrcamentosPage() {
                             </option>
                           ))}
                         </select>
+
+                        {/* Editar */}
+                        <button
+                          onClick={() => abrirEdicao(o)}
+                          style={{
+                            background: "#FAEEDA",
+                            color: "#633806",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "4px 8px",
+                            fontSize: "11px",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                          }}
+                        >
+                          ✏️
+                        </button>
+
+                        {/* Excluir */}
+                        <button
+                          onClick={() => setConfirmDelete(o.id)}
+                          style={{
+                            background: "#FCEBEB",
+                            color: "#791F1F",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "4px 8px",
+                            fontSize: "11px",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                          }}
+                        >
+                          🗑️
+                        </button>
+
+                        {/* Converter */}
                         {o.status === "aprovado" && (
                           <button
                             onClick={() => abrirConversao(o)}
@@ -981,7 +1137,7 @@ export default function OrcamentosPage() {
                               color: "#fff",
                               border: "none",
                               borderRadius: "6px",
-                              padding: "4px 10px",
+                              padding: "4px 8px",
                               fontSize: "11px",
                               fontWeight: 600,
                               cursor: "pointer",
@@ -989,7 +1145,7 @@ export default function OrcamentosPage() {
                               whiteSpace: "nowrap",
                             }}
                           >
-                            🏗️ Converter
+                            🏗️
                           </button>
                         )}
                       </div>
