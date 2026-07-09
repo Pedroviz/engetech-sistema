@@ -3,14 +3,14 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const data = await request.json();
 
-    // Buscar o orçamento
     const orcamento = await prisma.orcamento.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { cliente: true },
     });
 
@@ -21,7 +21,6 @@ export async function POST(
       );
     }
 
-    // Verificar se já existe obra com esse centro de custo
     const jaExiste = await prisma.obra.findUnique({
       where: { centroCusto: data.centroCusto },
     });
@@ -35,7 +34,6 @@ export async function POST(
       );
     }
 
-    // Criar a obra
     const obra = await prisma.obra.create({
       data: {
         centroCusto: data.centroCusto,
@@ -51,9 +49,8 @@ export async function POST(
       include: { cliente: true },
     });
 
-    // Atualizar status do orçamento para aprovado
     await prisma.orcamento.update({
-      where: { id: params.id },
+      where: { id },
       data: { status: "aprovado" },
     });
 

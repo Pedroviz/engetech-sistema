@@ -6,20 +6,20 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const resolvedParams = await params;
+    const { id } = await params;
     const data = await request.json();
-
     const orcamento = await prisma.orcamento.update({
-      where: { id: resolvedParams.id },
+      where: { id },
       data: {
         status: data.status,
         observacoes: data.observacoes,
         linkArquivo: data.linkArquivo,
+        valor: data.valor ? Number(data.valor) : undefined,
       },
       include: { cliente: true },
     });
     return NextResponse.json(orcamento);
-  } catch {
+  } catch (error) {
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }
@@ -29,13 +29,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const resolvedParams = await params;
-
-    await prisma.orcamento.delete({
-      where: { id: resolvedParams.id },
-    });
+    const { id } = await params;
+    await prisma.orcamento.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }

@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const data = await request.json();
     const subtarefa = await prisma.subtarefa.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         status: data.status,
         percentual: Number(data.percentual),
