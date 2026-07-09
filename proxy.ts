@@ -6,12 +6,10 @@ export function middleware(request: NextRequest) {
 
   const isPublic = pathname === "/login" || pathname.startsWith("/api/auth");
 
-  // Se não tem token e não é rota pública, redireciona para login
   if (!token && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Se tem token e está na página de login, redireciona para dashboard
   if (token && pathname === "/login") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
