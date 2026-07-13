@@ -51,12 +51,12 @@ interface Lancamento {
 // CONSTANTES E CONFIGURAÇÕES DE GRÁFICOS
 // ============================================================================
 const CORES = [
-  "#185FA5",
-  "#1D9E75",
-  "#E24B4A",
-  "#BA7517",
-  "#8B5CF6",
-  "#6B7280",
+  "#3B82F6", // Azul suave
+  "#10B981", // Verde esmeralda
+  "#EF4444", // Vermelho coral (menos agressivo)
+  "#F59E0B", // Laranja/Âmbar
+  "#8B5CF6", // Roxo moderno
+  "#64748B", // Cinza slate
 ];
 
 const STATUS_LABELS: Record<string, string> = {
@@ -68,11 +68,11 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_CORES: Record<string, string> = {
-  enviado: "#185FA5",
-  negociacao: "#BA7517",
-  aprovado: "#1D9E75",
-  recusado: "#E24B4A",
-  expirado: "#888",
+  enviado: "#3B82F6",
+  negociacao: "#F59E0B",
+  aprovado: "#10B981",
+  recusado: "#EF4444",
+  expirado: "#94A3B8",
 };
 
 // ============================================================================
@@ -151,32 +151,21 @@ export default function DashboardPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        // Mantido conforme a lógica original solicitada
         const [oRes, orcRes, lancRes] = await Promise.all([
           fetch("/api/obras"),
           fetch("/api/orcamentos"),
           fetch("/api/lancamentos"),
         ]);
 
-        setObras(
-          Array.isArray(await oRes.json())
-            ? await (await fetch("/api/obras")).json()
-            : [],
-        );
-
-        const oData = await oRes.json().catch(() => []);
-        const orcData = await orcRes.json().catch(() => []);
-        const lData = await lancRes.json().catch(() => []);
-
-        const [o2, orc2, l2] = await Promise.all([
-          fetch("/api/obras").then((r) => r.json()),
-          fetch("/api/orcamentos").then((r) => r.json()),
-          fetch("/api/lancamentos").then((r) => r.json()),
+        const [oData, orcData, lData] = await Promise.all([
+          oRes.json().catch(() => []),
+          orcRes.json().catch(() => []),
+          lancRes.json().catch(() => []),
         ]);
 
-        setObras(Array.isArray(o2) ? o2 : []);
-        setOrcamentos(Array.isArray(orc2) ? orc2 : []);
-        setLancamentos(Array.isArray(l2) ? l2 : []);
+        setObras(Array.isArray(oData) ? oData : []);
+        setOrcamentos(Array.isArray(orcData) ? orcData : []);
+        setLancamentos(Array.isArray(lData) ? lData : []);
       } catch (err) {
         console.error("Erro ao carregar dashboard:", err);
       } finally {
@@ -351,13 +340,15 @@ export default function DashboardPage() {
                 />
                 <Bar
                   dataKey="Orçado"
-                  fill="var(--blue)"
+                  fill="#3B82F6"
                   radius={[4, 4, 0, 0]}
+                  maxBarSize={45}
                 />
                 <Bar
                   dataKey="Realizado"
-                  fill="var(--red)"
+                  fill="#EF4444"
                   radius={[4, 4, 0, 0]}
+                  maxBarSize={45}
                 />
               </BarChart>
             </ResponsiveContainer>

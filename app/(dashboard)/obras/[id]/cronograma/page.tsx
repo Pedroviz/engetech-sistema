@@ -128,7 +128,11 @@ export default function CronogramaPage() {
   }
 
   useEffect(() => {
-    if (id) loadData();
+    if (!id) return;
+
+    (async () => {
+      await loadData();
+    })();
   }, [id]);
 
   async function salvarEtapa(e: React.FormEvent) {
@@ -190,8 +194,6 @@ export default function CronogramaPage() {
   // Cálculos do Gantt
   function ganttData() {
     if (!obra || !etapas.length) return { items: [], totalDias: 0 };
-    const inicio = new Date(obra.inicio);
-    const fim = new Date(obra.previsaoFim);
     const totalDias = daysBetween(obra.inicio, obra.previsaoFim);
     const hoje = new Date();
     const diaHoje = Math.min(
@@ -388,7 +390,8 @@ export default function CronogramaPage() {
 
           {etapas.length === 0 ? (
             <p style={{ fontSize: "13px", color: "#aaa" }}>
-              Nenhuma etapa cadastrada. Adicione etapas na aba "Etapas".
+              Nenhuma etapa cadastrada. Adicione etapas na aba
+              &quot;Etapas&quot;.
             </p>
           ) : (
             <div style={{ overflowX: "auto" }}>

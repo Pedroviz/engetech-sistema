@@ -34,7 +34,7 @@ export default function DashboardLayout({
       })
       .catch(() => router.push("/login"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [router]);
 
   if (loading) {
     return (
