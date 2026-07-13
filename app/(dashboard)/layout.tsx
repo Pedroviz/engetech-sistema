@@ -1,29 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Header from "@/components/dashboard/Header";
-
-interface User {
-  name: string;
-  email: string;
-  role: string;
-}
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
+    // Aplicar tema salvo antes de renderizar
+    const saved = localStorage.getItem("engetech-theme");
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+    const dark = saved ? saved === "dark" : prefersDark;
+    document.documentElement.setAttribute(
+      "data-theme",
+      dark ? "dark" : "light",
+    );
+
     fetch("/api/auth/me")
       .then((res) => res.json())
       .then((data) => {
         if (data.user) setUser(data.user);
+        else router.push("/login");
       })
+      .catch(() => router.push("/login"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -35,16 +44,24 @@ export default function DashboardLayout({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#f5f5f3",
+          background: "var(--bg-secondary)",
         }}
       >
-        <div style={{ fontSize: "14px", color: "#888" }}>Carregando...</div>
+        <div style={{ fontSize: "14px", color: "var(--text-muted)" }}>
+          Carregando...
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#f5f5f3" }}>
+    <div
+      style={{
+        display: "flex",
+        minHeight: "100vh",
+        background: "var(--bg-secondary)",
+      }}
+    >
       <Sidebar user={user || { name: "", email: "", role: "" }} />
       <div
         style={{

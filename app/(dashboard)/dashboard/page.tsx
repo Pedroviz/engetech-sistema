@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import * as S from "@/lib/styles";
 import {
   BarChart,
   Bar,
@@ -17,6 +18,9 @@ import {
   Legend,
 } from "recharts";
 
+// ============================================================================
+// TIPAGENS (INTERFACES)
+// ============================================================================
 interface Obra {
   id: string;
   centroCusto: string;
@@ -30,17 +34,22 @@ interface Obra {
   gastoEsporadico: number;
   cliente: { nome: string };
 }
+
 interface Orcamento {
   status: string;
   valor: number;
   createdAt: string;
 }
+
 interface Lancamento {
   tipo: string;
   valor: number;
   data: string;
 }
 
+// ============================================================================
+// CONSTANTES E CONFIGURAÇÕES DE GRÁFICOS
+// ============================================================================
 const CORES = [
   "#185FA5",
   "#1D9E75",
@@ -50,10 +59,36 @@ const CORES = [
   "#6B7280",
 ];
 
+const STATUS_LABELS: Record<string, string> = {
+  enviado: "Enviado",
+  negociacao: "Negociação",
+  aprovado: "Aprovado",
+  recusado: "Recusado",
+  expirado: "Expirado",
+};
+
+const STATUS_CORES: Record<string, string> = {
+  enviado: "#185FA5",
+  negociacao: "#BA7517",
+  aprovado: "#1D9E75",
+  recusado: "#E24B4A",
+  expirado: "#888",
+};
+
+// ============================================================================
+// FUNÇÕES AUXILIARES
+// ============================================================================
 function formatMoney(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function formatMoneyShort(v: number) {
+  return v >= 1000 ? `R$${(v / 1000).toFixed(0)}k` : `R$${v}`;
+}
+
+// ============================================================================
+// COMPONENTES MENORES
+// ============================================================================
 function MetricCard({
   label,
   value,
@@ -66,18 +101,11 @@ function MetricCard({
   color?: string;
 }) {
   return (
-    <div
-      style={{
-        background: "#fff",
-        border: "1px solid #e0e0e0",
-        borderRadius: "10px",
-        padding: "16px 18px",
-      }}
-    >
+    <div style={S.metricCard}>
       <div
         style={{
           fontSize: "11px",
-          color: "#888",
+          color: "var(--text-secondary)",
           marginBottom: "6px",
           textTransform: "uppercase",
           letterSpacing: "0.04em",
@@ -86,12 +114,22 @@ function MetricCard({
         {label}
       </div>
       <div
-        style={{ fontSize: "22px", fontWeight: 700, color: color || "#1a1a1a" }}
+        style={{
+          fontSize: "22px",
+          fontWeight: 700,
+          color: color || "var(--text-primary)",
+        }}
       >
         {value}
       </div>
       {sub && (
-        <div style={{ fontSize: "11px", color: "#aaa", marginTop: "3px" }}>
+        <div
+          style={{
+            fontSize: "11px",
+            color: "var(--text-muted)",
+            marginTop: "3px",
+          }}
+        >
           {sub}
         </div>
       )}
@@ -99,67 +137,46 @@ function MetricCard({
   );
 }
 
-function CardGrafico({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      style={{
-        background: "#fff",
-        border: "1px solid #e0e0e0",
-        borderRadius: "10px",
-        padding: "18px 20px",
-      }}
-    >
-      <h3
-        style={{
-          fontSize: "11px",
-          fontWeight: 600,
-          color: "#888",
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-          marginBottom: "16px",
-        }}
-      >
-        {title}
-      </h3>
-      {children}
-    </div>
-  );
-}
-
-const customTooltipStyle = {
-  background: "#fff",
-  border: "1px solid #e0e0e0",
-  borderRadius: "8px",
-  fontSize: "12px",
-  padding: "8px 12px",
-};
-
+// ============================================================================
+// COMPONENTE PRINCIPAL: DASHBOARD
+// ============================================================================
 export default function DashboardPage() {
+  // Estados da aplicação
   const [obras, setObras] = useState<Obra[]>([]);
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
   const [lancamentos, setLancamentos] = useState<Lancamento[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Busca inicial de dados da API
   useEffect(() => {
     async function loadData() {
       try {
+        // Mantido conforme a lógica original solicitada
         const [oRes, orcRes, lancRes] = await Promise.all([
           fetch("/api/obras"),
           fetch("/api/orcamentos"),
           fetch("/api/lancamentos"),
         ]);
-        const oData = await oRes.json();
-        const orcData = await orcRes.json();
-        const lData = await lancRes.json();
-        setObras(Array.isArray(oData) ? oData : []);
-        setOrcamentos(Array.isArray(orcData) ? orcData : []);
-        setLancamentos(Array.isArray(lData) ? lData : []);
+
+        setObras(
+          Array.isArray(await oRes.json())
+            ? await (await fetch("/api/obras")).json()
+            : [],
+        );
+
+        const oData = await oRes.json().catch(() => []);
+        const orcData = await orcRes.json().catch(() => []);
+        const lData = await lancRes.json().catch(() => []);
+
+        const [o2, orc2, l2] = await Promise.all([
+          fetch("/api/obras").then((r) => r.json()),
+          fetch("/api/orcamentos").then((r) => r.json()),
+          fetch("/api/lancamentos").then((r) => r.json()),
+        ]);
+
+        setObras(Array.isArray(o2) ? o2 : []);
+        setOrcamentos(Array.isArray(orc2) ? orc2 : []);
+        setLancamentos(Array.isArray(l2) ? l2 : []);
       } catch (err) {
         console.error("Erro ao carregar dashboard:", err);
       } finally {
@@ -169,12 +186,17 @@ export default function DashboardPage() {
     loadData();
   }, []);
 
-  if (loading)
+  if (loading) {
     return (
-      <div style={{ color: "#888", fontSize: "14px" }}>Carregando dados...</div>
+      <div style={{ color: "var(--text-muted)", fontSize: "14px" }}>
+        Carregando dados...
+      </div>
     );
+  }
 
-  // ── Métricas gerais ──────────────────────────────────────
+  // --------------------------------------------------------------------------
+  // CÁLCULOS DE MÉTRICAS GERAIS
+  // --------------------------------------------------------------------------
   const receitaTotal = obras.reduce((a, o) => a + o.contrato, 0);
   const gastoTotal = obras.reduce(
     (a, o) => a + o.gastoMat + o.gastoMO + o.gastoEsporadico,
@@ -190,14 +212,18 @@ export default function DashboardPage() {
       ? Math.round((orcAprovados / orcamentos.length) * 100)
       : 0;
 
-  // ── Gráfico 1: Orçado vs Realizado por obra ──────────────
+  // --------------------------------------------------------------------------
+  // PREPARAÇÃO DE DADOS PARA OS GRÁFICOS
+  // --------------------------------------------------------------------------
+
+  // Gráfico de Barras: Orçado vs Realizado
   const dadosObras = obras.map((o) => ({
     name: o.centroCusto,
     Orçado: o.orcamentoMat + o.orcamentoMO,
     Realizado: o.gastoMat + o.gastoMO + o.gastoEsporadico,
   }));
 
-  // ── Gráfico 2: Pizza — distribuição de gastos ────────────
+  // Gráfico de Pizza: Distribuição de Gastos
   const totalMat = obras.reduce((a, o) => a + o.gastoMat, 0);
   const totalMO = obras.reduce((a, o) => a + o.gastoMO, 0);
   const totalEsp = obras.reduce((a, o) => a + o.gastoEsporadico, 0);
@@ -207,28 +233,14 @@ export default function DashboardPage() {
     { name: "Esporádicos", value: totalEsp },
   ].filter((d) => d.value > 0);
 
-  // ── Gráfico 3: Pipeline de orçamentos ───────────────────
-  const STATUS_LABELS: Record<string, string> = {
-    enviado: "Enviado",
-    negociacao: "Negociação",
-    aprovado: "Aprovado",
-    recusado: "Recusado",
-    expirado: "Expirado",
-  };
-  const STATUS_CORES: Record<string, string> = {
-    enviado: "#185FA5",
-    negociacao: "#BA7517",
-    aprovado: "#1D9E75",
-    recusado: "#E24B4A",
-    expirado: "#888",
-  };
+  // Gráfico de Pipeline: Conversão de Orçamentos
   const dadosPipeline = Object.entries(STATUS_LABELS).map(([key, label]) => ({
     name: label,
     Quantidade: orcamentos.filter((o) => o.status === key).length,
     fill: STATUS_CORES[key],
   }));
 
-  // ── Gráfico 4: Fluxo de caixa ────────────────────────────
+  // Gráfico de Linha: Fluxo de Caixa Mensal (Últimos 6 meses)
   const hoje = new Date();
   const meses = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(hoje.getFullYear(), hoje.getMonth() - 5 + i, 1);
@@ -251,12 +263,21 @@ export default function DashboardPage() {
     };
   });
 
-  const formatMoneyShort = (v: number) =>
-    v >= 1000 ? `R$${(v / 1000).toFixed(0)}k` : `R$${v}`;
+  // Estilo compartilhado para os tooltips dos gráficos
+  const tooltipStyle = {
+    background: "var(--bg-primary)",
+    border: "1px solid var(--border)",
+    borderRadius: "8px",
+    fontSize: "12px",
+    color: "var(--text-primary)",
+  };
 
+  // ============================================================================
+  // RENDERIZAÇÃO DA INTERFACE
+  // ============================================================================
   return (
     <div>
-      {/* Métricas */}
+      {/* 1. CARDS DE MÉTRICAS SUPERIORES */}
       <div
         style={{
           display: "grid",
@@ -269,7 +290,7 @@ export default function DashboardPage() {
           label="Obras ativas"
           value={String(obras.length)}
           sub="No momento"
-          color="#185FA5"
+          color="var(--blue)"
         />
         <MetricCard
           label="Receita contratada"
@@ -280,17 +301,17 @@ export default function DashboardPage() {
           label="Total gasto"
           value={formatMoney(gastoTotal)}
           sub="Todas as obras"
-          color="#E24B4A"
+          color="var(--red)"
         />
         <MetricCard
           label="Margem média"
           value={`${margemMedia}%`}
           sub={`Conversão: ${taxaConversao}%`}
-          color={Number(margemMedia) >= 30 ? "#1D9E75" : "#BA7517"}
+          color={Number(margemMedia) >= 30 ? "var(--green)" : "var(--amber)"}
         />
       </div>
 
-      {/* Linha 1: Orçado vs Realizado + Pizza */}
+      {/* 2. LINHA DE GRÁFICOS 1: BARRAS E PIZZA */}
       <div
         style={{
           display: "grid",
@@ -299,35 +320,55 @@ export default function DashboardPage() {
           marginBottom: "14px",
         }}
       >
-        <CardGrafico title="Orçado vs Realizado por obra">
+        {/* Gráfico: Orçado vs Realizado */}
+        <div style={S.card}>
+          <h3 style={S.cardTitle}>Orçado vs Realizado por obra</h3>
           {dadosObras.length === 0 ? (
-            <p style={{ fontSize: "13px", color: "#aaa" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
               Nenhuma obra cadastrada.
             </p>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={dadosObras} barGap={4}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
+                />
                 <YAxis
                   tickFormatter={formatMoneyShort}
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
                 />
                 <Tooltip
-                  contentStyle={customTooltipStyle}
+                  contentStyle={tooltipStyle}
                   formatter={(v: number) => formatMoney(v)}
                 />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="Orçado" fill="#185FA5" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Realizado" fill="#E24B4A" radius={[4, 4, 0, 0]} />
+                <Legend
+                  wrapperStyle={{
+                    fontSize: 12,
+                    color: "var(--text-secondary)",
+                  }}
+                />
+                <Bar
+                  dataKey="Orçado"
+                  fill="var(--blue)"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  dataKey="Realizado"
+                  fill="var(--red)"
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           )}
-        </CardGrafico>
+        </div>
 
-        <CardGrafico title="Distribuição de gastos">
+        {/* Gráfico: Distribuição de Gastos */}
+        <div style={S.card}>
+          <h3 style={S.cardTitle}>Distribuição de gastos</h3>
           {dadosPizza.length === 0 ? (
-            <p style={{ fontSize: "13px", color: "#aaa" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
               Sem gastos registrados.
             </p>
           ) : (
@@ -347,11 +388,13 @@ export default function DashboardPage() {
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={customTooltipStyle}
+                    contentStyle={tooltipStyle}
                     formatter={(v: number) => formatMoney(v)}
                   />
                 </PieChart>
               </ResponsiveContainer>
+
+              {/* Legenda customizada da Pizza */}
               <div
                 style={{
                   display: "flex",
@@ -386,9 +429,13 @@ export default function DashboardPage() {
                           flexShrink: 0,
                         }}
                       />
-                      <span style={{ color: "#666" }}>{d.name}</span>
+                      <span style={{ color: "var(--text-secondary)" }}>
+                        {d.name}
+                      </span>
                     </div>
-                    <span style={{ fontWeight: 600 }}>
+                    <span
+                      style={{ fontWeight: 600, color: "var(--text-primary)" }}
+                    >
                       {formatMoney(d.value)}
                     </span>
                   </div>
@@ -396,10 +443,10 @@ export default function DashboardPage() {
               </div>
             </>
           )}
-        </CardGrafico>
+        </div>
       </div>
 
-      {/* Linha 2: Fluxo de caixa + Pipeline orçamentos */}
+      {/* 3. LINHA DE GRÁFICOS 2: FLUXO E PIPELINE */}
       <div
         style={{
           display: "grid",
@@ -408,47 +455,59 @@ export default function DashboardPage() {
           marginBottom: "14px",
         }}
       >
-        <CardGrafico title="Fluxo de caixa — últimos 6 meses">
+        {/* Gráfico: Fluxo de Caixa */}
+        <div style={S.card}>
+          <h3 style={S.cardTitle}>Fluxo de caixa — últimos 6 meses</h3>
           {lancamentos.length === 0 ? (
-            <p style={{ fontSize: "13px", color: "#aaa" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
               Nenhum lançamento registrado.
             </p>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={dadosFluxo}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
+                />
                 <YAxis
                   tickFormatter={formatMoneyShort}
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
                 />
                 <Tooltip
-                  contentStyle={customTooltipStyle}
+                  contentStyle={tooltipStyle}
                   formatter={(v: number) => formatMoney(v)}
                 />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Legend
+                  wrapperStyle={{
+                    fontSize: 12,
+                    color: "var(--text-secondary)",
+                  }}
+                />
                 <Line
                   type="monotone"
                   dataKey="Entradas"
-                  stroke="#1D9E75"
+                  stroke="var(--green)"
                   strokeWidth={2.5}
                   dot={{ r: 4 }}
                 />
                 <Line
                   type="monotone"
                   dataKey="Saídas"
-                  stroke="#E24B4A"
+                  stroke="var(--red)"
                   strokeWidth={2.5}
                   dot={{ r: 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           )}
-        </CardGrafico>
+        </div>
 
-        <CardGrafico title="Pipeline de orçamentos">
+        {/* Gráfico: Pipeline de Orçamentos */}
+        <div style={S.card}>
+          <h3 style={S.cardTitle}>Pipeline de orçamentos</h3>
           {orcamentos.length === 0 ? (
-            <p style={{ fontSize: "13px", color: "#aaa" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
               Nenhum orçamento cadastrado.
             </p>
           ) : (
@@ -456,17 +515,17 @@ export default function DashboardPage() {
               <BarChart data={dadosPipeline} layout="vertical" barSize={18}>
                 <XAxis
                   type="number"
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
                   allowDecimals={false}
                 />
                 <YAxis
                   type="category"
                   dataKey="name"
                   width={80}
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
                 />
                 <Tooltip
-                  contentStyle={customTooltipStyle}
+                  contentStyle={tooltipStyle}
                   formatter={(v: number) => [`${v} orçamento(s)`, "Quantidade"]}
                 />
                 <Bar dataKey="Quantidade" radius={[0, 4, 4, 0]}>
@@ -477,42 +536,18 @@ export default function DashboardPage() {
               </BarChart>
             </ResponsiveContainer>
           )}
-        </CardGrafico>
+        </div>
       </div>
 
-      {/* Tabela de obras */}
-      <div
-        style={{
-          background: "#fff",
-          border: "1px solid #e0e0e0",
-          borderRadius: "10px",
-          padding: "18px 20px",
-        }}
-      >
-        <h3
-          style={{
-            fontSize: "11px",
-            fontWeight: 600,
-            color: "#888",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            marginBottom: "14px",
-          }}
-        >
-          Obras em andamento
-        </h3>
+      {/* 4. TABELA: OBRAS EM ANDAMENTO */}
+      <div style={S.card}>
+        <h3 style={S.cardTitle}>Obras em andamento</h3>
         {obras.length === 0 ? (
-          <p style={{ fontSize: "13px", color: "#aaa" }}>
-            Nenhuma obra cadastrada ainda.
+          <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+            Nenhuma obra cadastrada.
           </p>
         ) : (
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: "13px",
-            }}
-          >
+          <table style={S.table}>
             <thead>
               <tr>
                 {[
@@ -524,17 +559,7 @@ export default function DashboardPage() {
                   "Margem",
                   "Status",
                 ].map((h) => (
-                  <th
-                    key={h}
-                    style={{
-                      textAlign: "left",
-                      padding: "0 0 10px 0",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      color: "#888",
-                      borderBottom: "1px solid #e0e0e0",
-                    }}
-                  >
+                  <th key={h} style={S.th}>
                     {h}
                   </th>
                 ))}
@@ -553,38 +578,26 @@ export default function DashboardPage() {
                         ).toFixed(0),
                       )
                     : 0;
+
+                // Definição de cores de acordo com a saúde financeira (Margem)
                 const mgColor =
-                  mg >= 35 ? "#1D9E75" : mg >= 20 ? "#BA7517" : "#E24B4A";
+                  mg >= 35
+                    ? "var(--green)"
+                    : mg >= 20
+                      ? "var(--amber)"
+                      : "var(--red)";
+
                 return (
                   <tr key={obra.id}>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        fontWeight: 600,
-                      }}
-                    >
+                    <td style={{ ...S.td, fontWeight: 600 }}>
                       {obra.centroCusto}
                     </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        color: "#555",
-                      }}
-                    >
-                      {obra.cliente?.nome}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                      }}
-                    >
+                    <td style={S.td}>{obra.cliente?.nome}</td>
+                    <td style={S.td}>
                       <span
                         style={{
-                          background: "#E6F1FB",
-                          color: "#0C447C",
+                          background: "var(--bg-tertiary)",
+                          color: "var(--blue)",
                           padding: "2px 8px",
                           borderRadius: "10px",
                           fontSize: "11px",
@@ -594,49 +607,24 @@ export default function DashboardPage() {
                         {obra.tipo}
                       </span>
                     </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                      }}
-                    >
-                      {formatMoney(obra.contrato)}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        color: "#E24B4A",
-                      }}
-                    >
+                    <td style={S.td}>{formatMoney(obra.contrato)}</td>
+                    <td style={{ ...S.td, color: "var(--red)" }}>
                       {formatMoney(gasto)}
                     </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        fontWeight: 700,
-                        color: mgColor,
-                      }}
-                    >
+                    <td style={{ ...S.td, fontWeight: 700, color: mgColor }}>
                       {mg}%
                     </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                      }}
-                    >
+                    <td style={S.td}>
                       <span
                         style={{
                           background:
                             obra.status === "finalizada"
                               ? "#EAF3DE"
-                              : "#FAEEDA",
+                              : "var(--bg-tertiary)",
                           color:
                             obra.status === "finalizada"
                               ? "#27500A"
-                              : "#633806",
+                              : "var(--amber)",
                           padding: "2px 8px",
                           borderRadius: "10px",
                           fontSize: "11px",
