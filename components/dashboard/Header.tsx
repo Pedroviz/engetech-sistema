@@ -16,27 +16,29 @@ const titles: Record<string, string> = {
 
 export default function Header() {
   const pathname = usePathname();
-  const title = titles[pathname] || "Engetech";
+  const base = "/" + pathname.split("/")[1];
+  const title = titles[base] || "Engetech";
 
   return (
     <header
       style={{
         height: "56px",
-        background: "#fff",
-        borderBottom: "1px solid #e0e0e0",
+        background: "var(--bg-primary)",
+        borderBottom: "1px solid var(--border)",
         display: "flex",
         alignItems: "center",
         padding: "0 24px",
         position: "sticky",
         top: 0,
         zIndex: 10,
+        transition: "background 0.2s, border-color 0.2s",
       }}
     >
       <h1
         style={{
           fontSize: "16px",
           fontWeight: 600,
-          color: "#1a1a1a",
+          color: "var(--text-primary)",
         }}
       >
         {title}
