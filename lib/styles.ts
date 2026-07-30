@@ -1,11 +1,11 @@
 // Estilos compartilhados que respeitam o tema claro/escuro
 export const card: React.CSSProperties = {
-  background: "#FFFFFF",
+  background: "var(--bg-primary, #FFFFFF)",
   borderRadius: "12px",
   padding: "20px",
-  // Removemos a borda sólida e adicionamos uma sombra suave
   boxShadow: "0 4px 24px rgba(0, 0, 0, 0.04)",
-  border: "1px solid rgba(0,0,0,0.02)",
+  // Opcional: suavize a borda para se adaptar ao modo escuro também
+  border: "1px solid var(--border, rgba(0,0,0,0.02))",
   display: "flex",
   flexDirection: "column",
 };
@@ -20,11 +20,11 @@ export const cardTitle: React.CSSProperties = {
 };
 
 export const metricCard: React.CSSProperties = {
-  background: "#FFFFFF",
+  background: "var(--bg-primary, #FFFFFF)",
   borderRadius: "12px",
   padding: "16px 20px",
   boxShadow: "0 4px 24px rgba(0, 0, 0, 0.04)",
-  border: "1px solid rgba(0,0,0,0.02)",
+  border: "1px solid var(--border, rgba(0,0,0,0.02))",
   display: "flex",
   flexDirection: "column",
   justifyContent: "center",

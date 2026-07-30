@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   BarChart,
@@ -115,7 +115,8 @@ export default function CronogramaPage() {
     data: "",
   });
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
+    if (!id) return;
     const [obraRes, etapasRes, ocorrRes] = await Promise.all([
       fetch(`/api/obras/${id}`),
       fetch(`/api/etapas?obraId=${id}`),
@@ -125,7 +126,7 @@ export default function CronogramaPage() {
     setEtapas(await etapasRes.json());
     setOcorrencias(await ocorrRes.json());
     setLoading(false);
-  }
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -133,7 +134,7 @@ export default function CronogramaPage() {
     (async () => {
       await loadData();
     })();
-  }, [id]);
+  }, [id, loadData]);
 
   async function salvarEtapa(e: React.FormEvent) {
     e.preventDefault();
@@ -347,7 +348,7 @@ export default function CronogramaPage() {
         ].map((t) => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key as any)}
+            onClick={() => setTab(t.key as "gantt" | "etapas" | "ocorrencias")}
             style={{
               border: "none",
               background: tab === t.key ? "#fff" : "transparent",
@@ -841,7 +842,8 @@ export default function CronogramaPage() {
                 fontSize: "13px",
               }}
             >
-              Nenhuma etapa cadastrada. Clique em "+ Nova Etapa" para começar.
+              Nenhuma etapa cadastrada. Clique em &quot;+ Nova Etapa&quot; para
+              começar.
             </div>
           ) : (
             etapas.map((etapa) => {

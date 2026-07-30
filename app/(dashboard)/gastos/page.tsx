@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import * as S from "@/lib/styles";
 
 interface Obra {
   id: string;
@@ -20,29 +21,13 @@ function formatMoney(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-const lbl: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#666",
-  display: "block",
-  marginBottom: "5px",
-};
-const inp: React.CSSProperties = {
-  width: "100%",
-  border: "1px solid #e0e0e0",
-  borderRadius: "8px",
-  padding: "8px 10px",
-  fontSize: "13px",
-  fontFamily: "inherit",
-  background: "#fff",
-  outline: "none",
-};
-
 export default function GastosPage() {
   const [gastos, setGastos] = useState<Gasto[]>([]);
   const [obras, setObras] = useState<Obra[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [form, setForm] = useState({
     descricao: "",
     justificativa: "",
@@ -52,28 +37,21 @@ export default function GastosPage() {
   });
 
   async function loadData() {
-    const [gRes, oRes] = await Promise.all([
-      fetch("/api/gastos"),
-      fetch("/api/obras"),
+    const [g, o] = await Promise.all([
+      fetch("/api/gastos").then((r) => r.json()),
+      fetch("/api/obras").then((r) => r.json()),
     ]);
-    setGastos(await gRes.json());
-    setObras(await oRes.json());
+    setGastos(Array.isArray(g) ? g : []);
+    setObras(Array.isArray(o) ? o : []);
     setLoading(false);
   }
 
   useEffect(() => {
-    async function initialize() {
+    const fetchData = async () => {
       await loadData();
-    }
-
-    initialize();
+    };
+    fetchData();
   }, []);
-
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -95,12 +73,69 @@ export default function GastosPage() {
     loadData();
   }
 
+  async function excluir(id: string) {
+    await fetch(`/api/gastos/${id}`, { method: "DELETE" });
+    setConfirmDelete(null);
+    loadData();
+  }
+
   const total = gastos.reduce((a, g) => a + g.valor, 0);
 
-  if (loading) return <div style={{ color: "#888" }}>Carregando...</div>;
+  if (loading)
+    return <div style={{ color: "var(--text-muted)" }}>Carregando...</div>;
 
   return (
     <div>
+      {confirmDelete && (
+        <div style={S.modal}>
+          <div style={{ ...S.modalBox, width: "360px" }}>
+            <h3
+              style={{
+                fontSize: "15px",
+                fontWeight: 600,
+                marginBottom: "8px",
+                color: "var(--text-primary)",
+              }}
+            >
+              🗑️ Excluir gasto?
+            </h3>
+            <p
+              style={{
+                fontSize: "13px",
+                color: "var(--text-secondary)",
+                marginBottom: "20px",
+              }}
+            >
+              Esta ação não pode ser desfeita.
+            </p>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                onClick={() => excluir(confirmDelete)}
+                style={{
+                  background: "var(--red)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "9px 20px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                Sim, excluir
+              </button>
+              <button
+                onClick={() => setConfirmDelete(null)}
+                style={S.btnSecondary}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
         style={{
           display: "flex",
@@ -109,34 +144,15 @@ export default function GastosPage() {
           marginBottom: "16px",
         }}
       >
-        <div
-          style={{
-            background: "#FAEEDA",
-            border: "1px solid #FAC775",
-            borderRadius: "8px",
-            padding: "10px 14px",
-            fontSize: "13px",
-            color: "#633806",
-            display: "flex",
-            gap: "8px",
-            alignItems: "center",
-          }}
-        >
-          ⚠ {gastos.length} gasto(s) esporádico(s) — total fora do orçamento:{" "}
+        <div style={{ ...S.alertWarning, margin: 0 }}>
+          ⚠ {gastos.length} gasto(s) esporádico(s) — total:{" "}
           <strong>{formatMoney(total)}</strong>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
           style={{
-            background: "#185FA5",
-            color: "#fff",
-            border: "none",
-            borderRadius: "8px",
-            padding: "9px 16px",
-            fontSize: "13px",
-            fontWeight: 600,
-            cursor: "pointer",
-            fontFamily: "inherit",
+            ...S.btnPrimary,
+            background: showForm ? "var(--text-muted)" : "var(--blue)",
           }}
         >
           {showForm ? "Cancelar" : "+ Registrar Gasto"}
@@ -144,17 +160,14 @@ export default function GastosPage() {
       </div>
 
       {showForm && (
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #e0e0e0",
-            borderRadius: "10px",
-            padding: "20px",
-            marginBottom: "16px",
-          }}
-        >
+        <div style={{ ...S.card, marginBottom: "16px" }}>
           <h3
-            style={{ fontSize: "14px", fontWeight: 600, marginBottom: "16px" }}
+            style={{
+              fontSize: "14px",
+              fontWeight: 600,
+              marginBottom: "16px",
+              color: "var(--text-primary)",
+            }}
           >
             Registrar Gasto Esporádico
           </h3>
@@ -167,24 +180,26 @@ export default function GastosPage() {
               }}
             >
               <div>
-                <label style={lbl}>Descrição</label>
+                <label style={S.label}>Descrição</label>
                 <input
-                  name="descricao"
                   value={form.descricao}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, descricao: e.target.value }))
+                  }
                   required
-                  placeholder="Ex: Gesso extra, locação andaime..."
-                  style={inp}
+                  placeholder="Ex: Gesso extra..."
+                  style={S.input}
                 />
               </div>
               <div>
-                <label style={lbl}>Obra</label>
+                <label style={S.label}>Obra</label>
                 <select
-                  name="obraId"
                   value={form.obraId}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, obraId: e.target.value }))
+                  }
                   required
-                  style={inp}
+                  style={S.input}
                 >
                   <option value="">Selecione...</option>
                   {obras.map((o) => (
@@ -195,36 +210,39 @@ export default function GastosPage() {
                 </select>
               </div>
               <div style={{ gridColumn: "1/-1" }}>
-                <label style={lbl}>Justificativa (obrigatório)</label>
+                <label style={S.label}>Justificativa (obrigatório)</label>
                 <input
-                  name="justificativa"
                   value={form.justificativa}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, justificativa: e.target.value }))
+                  }
                   required
                   placeholder="Por que esse gasto não estava previsto?"
-                  style={inp}
+                  style={S.input}
                 />
               </div>
               <div>
-                <label style={lbl}>Valor (R$)</label>
+                <label style={S.label}>Valor (R$)</label>
                 <input
-                  name="valor"
                   type="number"
                   value={form.valor}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, valor: e.target.value }))
+                  }
                   required
                   placeholder="0,00"
-                  style={inp}
+                  style={S.input}
                 />
               </div>
               <div>
-                <label style={lbl}>Data</label>
+                <label style={S.label}>Data</label>
                 <input
-                  name="data"
                   type="date"
                   value={form.data}
-                  onChange={handleChange}
-                  style={inp}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, data: e.target.value }))
+                  }
+                  style={S.input}
                 />
               </div>
             </div>
@@ -232,16 +250,9 @@ export default function GastosPage() {
               type="submit"
               disabled={saving}
               style={{
+                ...S.btnPrimary,
                 marginTop: "16px",
-                background: saving ? "#93c0e8" : "#185FA5",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                padding: "10px 20px",
-                fontSize: "13px",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "inherit",
+                opacity: saving ? 0.6 : 1,
               }}
             >
               {saving ? "Salvando..." : "Salvar Gasto"}
@@ -250,108 +261,66 @@ export default function GastosPage() {
         </div>
       )}
 
-      <div
-        style={{
-          background: "#fff",
-          border: "1px solid #e0e0e0",
-          borderRadius: "10px",
-          padding: "18px 20px",
-        }}
-      >
-        <h3
-          style={{
-            fontSize: "11px",
-            fontWeight: 600,
-            color: "#888",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            marginBottom: "14px",
-          }}
-        >
-          Gastos Registrados
-        </h3>
+      <div style={S.card}>
+        <h3 style={S.cardTitle}>Gastos Registrados</h3>
         {gastos.length === 0 ? (
-          <p style={{ fontSize: "13px", color: "#aaa" }}>
+          <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
             Nenhum gasto esporádico registrado.
           </p>
         ) : (
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: "13px",
-            }}
-          >
+          <table style={S.table}>
             <thead>
               <tr>
-                {["Data", "Descrição", "Justificativa", "Obra", "Valor"].map(
-                  (h) => (
-                    <th
-                      key={h}
-                      style={{
-                        textAlign: "left",
-                        padding: "0 0 10px 0",
-                        fontSize: "11px",
-                        fontWeight: 600,
-                        color: "#888",
-                        borderBottom: "1px solid #e0e0e0",
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ),
-                )}
+                {[
+                  "Data",
+                  "Descrição",
+                  "Justificativa",
+                  "Obra",
+                  "Valor",
+                  "",
+                ].map((h) => (
+                  <th key={h} style={S.th}>
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {gastos.map((g) => (
                 <tr key={g.id}>
-                  <td
-                    style={{
-                      padding: "10px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                      color: "#888",
-                    }}
-                  >
+                  <td style={{ ...S.td, color: "var(--text-secondary)" }}>
                     {new Date(g.data).toLocaleDateString("pt-BR")}
                   </td>
+                  <td style={{ ...S.td, fontWeight: 600 }}>{g.descricao}</td>
                   <td
                     style={{
-                      padding: "10px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {g.descricao}
-                  </td>
-                  <td
-                    style={{
-                      padding: "10px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                      color: "#555",
+                      ...S.td,
+                      color: "var(--text-secondary)",
                       fontSize: "12px",
                     }}
                   >
                     {g.justificativa}
                   </td>
-                  <td
-                    style={{
-                      padding: "10px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                      color: "#555",
-                    }}
-                  >
-                    {g.obra?.centroCusto}
-                  </td>
-                  <td
-                    style={{
-                      padding: "10px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                      color: "#E24B4A",
-                      fontWeight: 600,
-                    }}
-                  >
+                  <td style={S.td}>{g.obra?.centroCusto}</td>
+                  <td style={{ ...S.td, color: "var(--red)", fontWeight: 600 }}>
                     {formatMoney(g.valor)}
+                  </td>
+                  <td style={S.td}>
+                    <button
+                      onClick={() => setConfirmDelete(g.id)}
+                      style={{
+                        background: "#FCEBEB",
+                        color: "#791F1F",
+                        border: "none",
+                        borderRadius: "6px",
+                        padding: "4px 8px",
+                        fontSize: "11px",
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      🗑️
+                    </button>
                   </td>
                 </tr>
               ))}

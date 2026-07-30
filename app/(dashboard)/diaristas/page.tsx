@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import * as S from "@/lib/styles";
 
 interface Obra {
   id: string;
@@ -22,29 +23,11 @@ interface Pagamento {
   valorDia: number;
   total: number;
   status: string;
-  createdAt: string;
 }
 
 function formatMoney(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
-
-const lbl: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#666",
-  display: "block",
-  marginBottom: "5px",
-};
-const inp: React.CSSProperties = {
-  width: "100%",
-  border: "1px solid #e0e0e0",
-  borderRadius: "8px",
-  padding: "8px 10px",
-  fontSize: "13px",
-  fontFamily: "inherit",
-  background: "#fff",
-  outline: "none",
-};
 
 export default function DiaristasPage() {
   const [diaristas, setDiaristas] = useState<Diarista[]>([]);
@@ -69,19 +52,22 @@ export default function DiaristasPage() {
   });
 
   async function loadData() {
-    const [dRes, pRes, oRes] = await Promise.all([
-      fetch("/api/diaristas"),
-      fetch("/api/pagamentos"),
-      fetch("/api/obras"),
+    const [d, p, o] = await Promise.all([
+      fetch("/api/diaristas").then((r) => r.json()),
+      fetch("/api/pagamentos").then((r) => r.json()),
+      fetch("/api/obras").then((r) => r.json()),
     ]);
-    setDiaristas(await dRes.json());
-    setPagamentos(await pRes.json());
-    setObras(await oRes.json());
+    setDiaristas(Array.isArray(d) ? d : []);
+    setPagamentos(Array.isArray(p) ? p : []);
+    setObras(Array.isArray(o) ? o : []);
     setLoading(false);
   }
 
   useEffect(() => {
-    loadData();
+    async function init() {
+      await loadData();
+    }
+    init();
   }, []);
 
   async function handleSubmitDiarista(e: React.FormEvent) {
@@ -126,11 +112,11 @@ export default function DiaristasPage() {
     .filter((p) => p.status === "pendente")
     .reduce((a, p) => a + p.total, 0);
 
-  if (loading) return <div style={{ color: "#888" }}>Carregando...</div>;
+  if (loading)
+    return <div style={{ color: "var(--text-muted)" }}>Carregando...</div>;
 
   return (
     <div>
-      {/* Métricas */}
       <div
         style={{
           display: "grid",
@@ -143,32 +129,24 @@ export default function DiaristasPage() {
           {
             label: "Diaristas cadastrados",
             value: String(diaristas.length),
-            color: "#185FA5",
+            color: "var(--blue)",
           },
           {
             label: "Total pago",
             value: formatMoney(totalPago),
-            color: "#1D9E75",
+            color: "var(--green)",
           },
           {
             label: "Pendente pagar",
             value: formatMoney(totalPendente),
-            color: "#BA7517",
+            color: "var(--amber)",
           },
         ].map((m) => (
-          <div
-            key={m.label}
-            style={{
-              background: "#fff",
-              border: "1px solid #e0e0e0",
-              borderRadius: "10px",
-              padding: "14px 16px",
-            }}
-          >
+          <div key={m.label} style={S.metricCard}>
             <div
               style={{
                 fontSize: "11px",
-                color: "#888",
+                color: "var(--text-secondary)",
                 marginBottom: "4px",
                 textTransform: "uppercase",
                 letterSpacing: "0.04em",
@@ -183,12 +161,11 @@ export default function DiaristasPage() {
         ))}
       </div>
 
-      {/* Tabs */}
       <div
         style={{
           display: "flex",
           gap: "4px",
-          background: "#f0f0ee",
+          background: "var(--bg-tertiary)",
           borderRadius: "8px",
           padding: "3px",
           width: "fit-content",
@@ -204,15 +181,15 @@ export default function DiaristasPage() {
             }}
             style={{
               border: "none",
-              background: tab === t ? "#fff" : "transparent",
+              background: tab === t ? "var(--bg-primary)" : "transparent",
               padding: "6px 16px",
               borderRadius: "6px",
               fontSize: "13px",
               fontWeight: tab === t ? 600 : 400,
-              color: tab === t ? "#1a1a1a" : "#888",
+              color:
+                tab === t ? "var(--text-primary)" : "var(--text-secondary)",
               cursor: "pointer",
               fontFamily: "inherit",
-              textTransform: "capitalize",
             }}
           >
             {t === "diaristas" ? "👷 Diaristas" : "💰 Pagamentos"}
@@ -230,15 +207,8 @@ export default function DiaristasPage() {
         <button
           onClick={() => setShowForm(!showForm)}
           style={{
-            background: "#185FA5",
-            color: "#fff",
-            border: "none",
-            borderRadius: "8px",
-            padding: "9px 16px",
-            fontSize: "13px",
-            fontWeight: 600,
-            cursor: "pointer",
-            fontFamily: "inherit",
+            ...S.btnPrimary,
+            background: showForm ? "var(--text-muted)" : "var(--blue)",
           }}
         >
           {showForm
@@ -249,19 +219,15 @@ export default function DiaristasPage() {
         </button>
       </div>
 
-      {/* Formulário diarista */}
       {showForm && tab === "diaristas" && (
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #e0e0e0",
-            borderRadius: "10px",
-            padding: "20px",
-            marginBottom: "16px",
-          }}
-        >
+        <div style={{ ...S.card, marginBottom: "16px" }}>
           <h3
-            style={{ fontSize: "14px", fontWeight: 600, marginBottom: "16px" }}
+            style={{
+              fontSize: "14px",
+              fontWeight: 600,
+              marginBottom: "16px",
+              color: "var(--text-primary)",
+            }}
           >
             Cadastrar Diarista
           </h3>
@@ -274,28 +240,26 @@ export default function DiaristasPage() {
               }}
             >
               <div>
-                <label style={lbl}>Nome</label>
+                <label style={S.label}>Nome</label>
                 <input
-                  name="nome"
                   value={formD.nome}
                   onChange={(e) =>
                     setFormD((p) => ({ ...p, nome: e.target.value }))
                   }
                   required
                   placeholder="Nome completo"
-                  style={inp}
+                  style={S.input}
                 />
               </div>
               <div>
-                <label style={lbl}>Função</label>
+                <label style={S.label}>Função</label>
                 <select
-                  name="funcao"
                   value={formD.funcao}
                   onChange={(e) =>
                     setFormD((p) => ({ ...p, funcao: e.target.value }))
                   }
                   required
-                  style={inp}
+                  style={S.input}
                 >
                   <option value="">Selecione...</option>
                   {[
@@ -315,25 +279,25 @@ export default function DiaristasPage() {
                 </select>
               </div>
               <div>
-                <label style={lbl}>Telefone</label>
+                <label style={S.label}>Telefone</label>
                 <input
                   value={formD.telefone}
                   onChange={(e) =>
                     setFormD((p) => ({ ...p, telefone: e.target.value }))
                   }
                   placeholder="(85) 99999-0000"
-                  style={inp}
+                  style={S.input}
                 />
               </div>
               <div>
-                <label style={lbl}>Obra</label>
+                <label style={S.label}>Obra</label>
                 <select
                   value={formD.obraId}
                   onChange={(e) =>
                     setFormD((p) => ({ ...p, obraId: e.target.value }))
                   }
                   required
-                  style={inp}
+                  style={S.input}
                 >
                   <option value="">Selecione...</option>
                   {obras.map((o) => (
@@ -348,16 +312,9 @@ export default function DiaristasPage() {
               type="submit"
               disabled={saving}
               style={{
+                ...S.btnPrimary,
                 marginTop: "16px",
-                background: saving ? "#93c0e8" : "#185FA5",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                padding: "10px 20px",
-                fontSize: "13px",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "inherit",
+                opacity: saving ? 0.6 : 1,
               }}
             >
               {saving ? "Salvando..." : "Salvar Diarista"}
@@ -366,19 +323,15 @@ export default function DiaristasPage() {
         </div>
       )}
 
-      {/* Formulário pagamento */}
       {showForm && tab === "pagamentos" && (
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #e0e0e0",
-            borderRadius: "10px",
-            padding: "20px",
-            marginBottom: "16px",
-          }}
-        >
+        <div style={{ ...S.card, marginBottom: "16px" }}>
           <h3
-            style={{ fontSize: "14px", fontWeight: 600, marginBottom: "16px" }}
+            style={{
+              fontSize: "14px",
+              fontWeight: 600,
+              marginBottom: "16px",
+              color: "var(--text-primary)",
+            }}
           >
             Registrar Pagamento
           </h3>
@@ -391,14 +344,14 @@ export default function DiaristasPage() {
               }}
             >
               <div>
-                <label style={lbl}>Diarista</label>
+                <label style={S.label}>Diarista</label>
                 <select
                   value={formP.diaristaId}
                   onChange={(e) =>
                     setFormP((p) => ({ ...p, diaristaId: e.target.value }))
                   }
                   required
-                  style={inp}
+                  style={S.input}
                 >
                   <option value="">Selecione...</option>
                   {diaristas.map((d) => (
@@ -409,7 +362,7 @@ export default function DiaristasPage() {
                 </select>
               </div>
               <div>
-                <label style={lbl}>Dias trabalhados</label>
+                <label style={S.label}>Dias trabalhados</label>
                 <input
                   type="number"
                   value={formP.diasTrab}
@@ -418,11 +371,11 @@ export default function DiaristasPage() {
                   }
                   required
                   placeholder="Ex: 5"
-                  style={inp}
+                  style={S.input}
                 />
               </div>
               <div>
-                <label style={lbl}>Valor por dia (R$)</label>
+                <label style={S.label}>Valor por dia (R$)</label>
                 <input
                   type="number"
                   value={formP.valorDia}
@@ -431,17 +384,17 @@ export default function DiaristasPage() {
                   }
                   required
                   placeholder="Ex: 180"
-                  style={inp}
+                  style={S.input}
                 />
               </div>
               <div>
-                <label style={lbl}>Status</label>
+                <label style={S.label}>Status</label>
                 <select
                   value={formP.status}
                   onChange={(e) =>
                     setFormP((p) => ({ ...p, status: e.target.value }))
                   }
-                  style={inp}
+                  style={S.input}
                 >
                   <option value="pendente">Pendente</option>
                   <option value="pago">Pago</option>
@@ -452,11 +405,11 @@ export default function DiaristasPage() {
               <div
                 style={{
                   marginTop: "10px",
-                  background: "#E6F1FB",
+                  background: "var(--bg-tertiary)",
                   borderRadius: "8px",
                   padding: "10px 14px",
                   fontSize: "13px",
-                  color: "#0C447C",
+                  color: "var(--blue)",
                   fontWeight: 600,
                 }}
               >
@@ -468,16 +421,9 @@ export default function DiaristasPage() {
               type="submit"
               disabled={saving}
               style={{
+                ...S.btnPrimary,
                 marginTop: "16px",
-                background: saving ? "#93c0e8" : "#185FA5",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                padding: "10px 20px",
-                fontSize: "13px",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "inherit",
+                opacity: saving ? 0.6 : 1,
               }}
             >
               {saving ? "Salvando..." : "Salvar Pagamento"}
@@ -486,42 +432,18 @@ export default function DiaristasPage() {
         </div>
       )}
 
-      {/* Tabela diaristas */}
       {tab === "diaristas" && (
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #e0e0e0",
-            borderRadius: "10px",
-            padding: "18px 20px",
-          }}
-        >
+        <div style={S.card}>
           {diaristas.length === 0 ? (
-            <p style={{ fontSize: "13px", color: "#aaa" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
               Nenhum diarista cadastrado.
             </p>
           ) : (
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: "13px",
-              }}
-            >
+            <table style={S.table}>
               <thead>
                 <tr>
                   {["Nome", "Função", "Telefone", "Obra"].map((h) => (
-                    <th
-                      key={h}
-                      style={{
-                        textAlign: "left",
-                        padding: "0 0 10px 0",
-                        fontSize: "11px",
-                        fontWeight: 600,
-                        color: "#888",
-                        borderBottom: "1px solid #e0e0e0",
-                      }}
-                    >
+                    <th key={h} style={S.th}>
                       {h}
                     </th>
                   ))}
@@ -530,41 +452,10 @@ export default function DiaristasPage() {
               <tbody>
                 {diaristas.map((d) => (
                   <tr key={d.id}>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {d.nome}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                      }}
-                    >
-                      {d.funcao}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        color: "#555",
-                      }}
-                    >
-                      {d.telefone || "—"}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        color: "#555",
-                      }}
-                    >
-                      {d.obra?.centroCusto}
-                    </td>
+                    <td style={{ ...S.td, fontWeight: 600 }}>{d.nome}</td>
+                    <td style={S.td}>{d.funcao}</td>
+                    <td style={S.td}>{d.telefone || "—"}</td>
+                    <td style={S.td}>{d.obra?.centroCusto}</td>
                   </tr>
                 ))}
               </tbody>
@@ -573,28 +464,14 @@ export default function DiaristasPage() {
         </div>
       )}
 
-      {/* Tabela pagamentos */}
       {tab === "pagamentos" && (
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #e0e0e0",
-            borderRadius: "10px",
-            padding: "18px 20px",
-          }}
-        >
+        <div style={S.card}>
           {pagamentos.length === 0 ? (
-            <p style={{ fontSize: "13px", color: "#aaa" }}>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
               Nenhum pagamento registrado.
             </p>
           ) : (
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: "13px",
-              }}
-            >
+            <table style={S.table}>
               <thead>
                 <tr>
                   {[
@@ -602,21 +479,11 @@ export default function DiaristasPage() {
                     "Função",
                     "Obra",
                     "Dias",
-                    "Valor/dia",
+                    "Valor/d",
                     "Total",
                     "Status",
                   ].map((h) => (
-                    <th
-                      key={h}
-                      style={{
-                        textAlign: "left",
-                        padding: "0 0 10px 0",
-                        fontSize: "11px",
-                        fontWeight: 600,
-                        color: "#888",
-                        borderBottom: "1px solid #e0e0e0",
-                      }}
-                    >
+                    <th key={h} style={S.th}>
                       {h}
                     </th>
                   ))}
@@ -625,64 +492,17 @@ export default function DiaristasPage() {
               <tbody>
                 {pagamentos.map((p) => (
                   <tr key={p.id}>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        fontWeight: 600,
-                      }}
-                    >
+                    <td style={{ ...S.td, fontWeight: 600 }}>
                       {p.diarista?.nome}
                     </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        color: "#555",
-                      }}
-                    >
-                      {p.diarista?.funcao}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        color: "#555",
-                      }}
-                    >
-                      {p.obra?.centroCusto}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                      }}
-                    >
-                      {p.diasTrab}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                      }}
-                    >
-                      {formatMoney(p.valorDia)}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        fontWeight: 600,
-                      }}
-                    >
+                    <td style={S.td}>{p.diarista?.funcao}</td>
+                    <td style={S.td}>{p.obra?.centroCusto}</td>
+                    <td style={S.td}>{p.diasTrab}</td>
+                    <td style={S.td}>{formatMoney(p.valorDia)}</td>
+                    <td style={{ ...S.td, fontWeight: 600 }}>
                       {formatMoney(p.total)}
                     </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                      }}
-                    >
+                    <td style={S.td}>
                       <span
                         style={{
                           background:

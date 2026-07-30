@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import * as S from "@/lib/styles";
 
 interface Obra {
   id: string;
@@ -24,22 +25,13 @@ function formatMoney(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-const lbl: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#666",
-  display: "block",
-  marginBottom: "5px",
-};
-const inp: React.CSSProperties = {
-  width: "100%",
-  border: "1px solid #e0e0e0",
-  borderRadius: "8px",
-  padding: "8px 10px",
-  fontSize: "13px",
-  fontFamily: "inherit",
-  background: "#fff",
-  outline: "none",
-};
+function statusMat(mat: Material) {
+  const saldo = mat.orcado - mat.utilizado;
+  if (saldo < 0) return { label: "Estourado", bg: "#FCEBEB", color: "#791F1F" };
+  if (saldo < mat.orcado * 0.15)
+    return { label: "Atenção", bg: "#FAEEDA", color: "#633806" };
+  return { label: "Ok", bg: "#EAF3DE", color: "#27500A" };
+}
 
 export default function MateriaisPage() {
   const [materiais, setMateriais] = useState<Material[]>([]);
@@ -48,6 +40,7 @@ export default function MateriaisPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [form, setForm] = useState({
     nome: "",
     obraId: "",
@@ -57,38 +50,24 @@ export default function MateriaisPage() {
   });
 
   async function loadData() {
-    const [matRes, obrasRes, fornRes] = await Promise.all([
-      fetch("/api/materiais"),
-      fetch("/api/obras"),
-      fetch("/api/fornecedores"),
+    const [m, o, f] = await Promise.all([
+      fetch("/api/materiais").then((r) => r.json()),
+      fetch("/api/obras").then((r) => r.json()),
+      fetch("/api/fornecedores").then((r) => r.json()),
     ]);
-    setMateriais(await matRes.json());
-    setObras(await obrasRes.json());
-    setFornecedores(await fornRes.json());
+
+    setMateriais(Array.isArray(m) ? m : []);
+    setObras(Array.isArray(o) ? o : []);
+    setFornecedores(Array.isArray(f) ? f : []);
     setLoading(false);
   }
 
   useEffect(() => {
-    async function fetchData() {
-      const [matRes, obrasRes, fornRes] = await Promise.all([
-        fetch("/api/materiais"),
-        fetch("/api/obras"),
-        fetch("/api/fornecedores"),
-      ]);
-      setMateriais(await matRes.json());
-      setObras(await obrasRes.json());
-      setFornecedores(await fornRes.json());
-      setLoading(false);
+    async function init() {
+      await loadData();
     }
-
-    fetchData();
+    void init();
   }, []);
-
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -114,19 +93,67 @@ export default function MateriaisPage() {
     loadData();
   }
 
-  function statusMat(mat: Material) {
-    const saldo = mat.orcado - mat.utilizado;
-    if (saldo < 0)
-      return { label: "Estourado", bg: "#FCEBEB", color: "#791F1F" };
-    if (saldo < mat.orcado * 0.15)
-      return { label: "Atenção", bg: "#FAEEDA", color: "#633806" };
-    return { label: "Ok", bg: "#EAF3DE", color: "#27500A" };
+  async function excluir(id: string) {
+    await fetch(`/api/materiais/${id}`, { method: "DELETE" });
+    setConfirmDelete(null);
+    loadData();
   }
 
-  if (loading) return <div style={{ color: "#888" }}>Carregando...</div>;
+  if (loading)
+    return <div style={{ color: "var(--text-muted)" }}>Carregando...</div>;
 
   return (
     <div>
+      {confirmDelete && (
+        <div style={S.modal}>
+          <div style={{ ...S.modalBox, width: "360px" }}>
+            <h3
+              style={{
+                fontSize: "15px",
+                fontWeight: 600,
+                marginBottom: "8px",
+                color: "var(--text-primary)",
+              }}
+            >
+              🗑️ Excluir material?
+            </h3>
+            <p
+              style={{
+                fontSize: "13px",
+                color: "var(--text-secondary)",
+                marginBottom: "20px",
+              }}
+            >
+              Esta ação não pode ser desfeita.
+            </p>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                onClick={() => excluir(confirmDelete)}
+                style={{
+                  background: "var(--red)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "9px 20px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                Sim, excluir
+              </button>
+              <button
+                onClick={() => setConfirmDelete(null)}
+                style={S.btnSecondary}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
         style={{
           display: "flex",
@@ -135,21 +162,14 @@ export default function MateriaisPage() {
           marginBottom: "16px",
         }}
       >
-        <p style={{ fontSize: "13px", color: "#888" }}>
+        <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
           {materiais.length} material(is) cadastrado(s)
         </p>
         <button
           onClick={() => setShowForm(!showForm)}
           style={{
-            background: "#185FA5",
-            color: "#fff",
-            border: "none",
-            borderRadius: "8px",
-            padding: "9px 16px",
-            fontSize: "13px",
-            fontWeight: 600,
-            cursor: "pointer",
-            fontFamily: "inherit",
+            ...S.btnPrimary,
+            background: showForm ? "var(--text-muted)" : "var(--blue)",
           }}
         >
           {showForm ? "Cancelar" : "+ Novo Material"}
@@ -157,17 +177,14 @@ export default function MateriaisPage() {
       </div>
 
       {showForm && (
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #e0e0e0",
-            borderRadius: "10px",
-            padding: "20px",
-            marginBottom: "16px",
-          }}
-        >
+        <div style={{ ...S.card, marginBottom: "16px" }}>
           <h3
-            style={{ fontSize: "14px", fontWeight: 600, marginBottom: "16px" }}
+            style={{
+              fontSize: "14px",
+              fontWeight: 600,
+              marginBottom: "16px",
+              color: "var(--text-primary)",
+            }}
           >
             Registrar Material
           </h3>
@@ -180,24 +197,26 @@ export default function MateriaisPage() {
               }}
             >
               <div>
-                <label style={lbl}>Nome do material</label>
+                <label style={S.label}>Nome do material</label>
                 <input
-                  name="nome"
                   value={form.nome}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, nome: e.target.value }))
+                  }
                   required
                   placeholder="Ex: Gesso, Cimento..."
-                  style={inp}
+                  style={S.input}
                 />
               </div>
               <div>
-                <label style={lbl}>Obra</label>
+                <label style={S.label}>Obra</label>
                 <select
-                  name="obraId"
                   value={form.obraId}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, obraId: e.target.value }))
+                  }
                   required
-                  style={inp}
+                  style={S.input}
                 >
                   <option value="">Selecione...</option>
                   {obras.map((o) => (
@@ -208,12 +227,13 @@ export default function MateriaisPage() {
                 </select>
               </div>
               <div>
-                <label style={lbl}>Fornecedor (opcional)</label>
+                <label style={S.label}>Fornecedor (opcional)</label>
                 <select
-                  name="fornecedorId"
                   value={form.fornecedorId}
-                  onChange={handleChange}
-                  style={inp}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, fornecedorId: e.target.value }))
+                  }
+                  style={S.input}
                 >
                   <option value="">Selecione...</option>
                   {fornecedores.map((f) => (
@@ -224,26 +244,28 @@ export default function MateriaisPage() {
                 </select>
               </div>
               <div>
-                <label style={lbl}>Valor orçado (R$)</label>
+                <label style={S.label}>Valor orçado (R$)</label>
                 <input
-                  name="orcado"
                   type="number"
                   value={form.orcado}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, orcado: e.target.value }))
+                  }
                   required
                   placeholder="0,00"
-                  style={inp}
+                  style={S.input}
                 />
               </div>
               <div>
-                <label style={lbl}>Valor utilizado (R$)</label>
+                <label style={S.label}>Valor utilizado (R$)</label>
                 <input
-                  name="utilizado"
                   type="number"
                   value={form.utilizado}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, utilizado: e.target.value }))
+                  }
                   placeholder="0,00"
-                  style={inp}
+                  style={S.input}
                 />
               </div>
             </div>
@@ -251,16 +273,9 @@ export default function MateriaisPage() {
               type="submit"
               disabled={saving}
               style={{
+                ...S.btnPrimary,
                 marginTop: "16px",
-                background: saving ? "#93c0e8" : "#185FA5",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                padding: "10px 20px",
-                fontSize: "13px",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "inherit",
+                opacity: saving ? 0.6 : 1,
               }}
             >
               {saving ? "Salvando..." : "Salvar Material"}
@@ -269,38 +284,14 @@ export default function MateriaisPage() {
         </div>
       )}
 
-      <div
-        style={{
-          background: "#fff",
-          border: "1px solid #e0e0e0",
-          borderRadius: "10px",
-          padding: "18px 20px",
-        }}
-      >
-        <h3
-          style={{
-            fontSize: "11px",
-            fontWeight: 600,
-            color: "#888",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            marginBottom: "14px",
-          }}
-        >
-          Controle de Materiais
-        </h3>
+      <div style={S.card}>
+        <h3 style={S.cardTitle}>Controle de Materiais</h3>
         {materiais.length === 0 ? (
-          <p style={{ fontSize: "13px", color: "#aaa" }}>
+          <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
             Nenhum material cadastrado.
           </p>
         ) : (
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: "13px",
-            }}
-          >
+          <table style={S.table}>
             <thead>
               <tr>
                 {[
@@ -311,18 +302,9 @@ export default function MateriaisPage() {
                   "Utilizado",
                   "Saldo",
                   "Status",
+                  "",
                 ].map((h) => (
-                  <th
-                    key={h}
-                    style={{
-                      textAlign: "left",
-                      padding: "0 0 10px 0",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      color: "#888",
-                      borderBottom: "1px solid #e0e0e0",
-                    }}
-                  >
+                  <th key={h} style={S.th}>
                     {h}
                   </th>
                 ))}
@@ -334,66 +316,23 @@ export default function MateriaisPage() {
                 const st = statusMat(m);
                 return (
                   <tr key={m.id}>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {m.nome}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        color: "#555",
-                      }}
-                    >
-                      {m.obra?.centroCusto}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        color: "#555",
-                      }}
-                    >
-                      {m.fornecedor?.razaoSocial || "—"}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                      }}
-                    >
-                      {formatMoney(m.orcado)}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        color: "#E24B4A",
-                      }}
-                    >
+                    <td style={{ ...S.td, fontWeight: 600 }}>{m.nome}</td>
+                    <td style={S.td}>{m.obra?.centroCusto}</td>
+                    <td style={S.td}>{m.fornecedor?.razaoSocial || "—"}</td>
+                    <td style={S.td}>{formatMoney(m.orcado)}</td>
+                    <td style={{ ...S.td, color: "var(--red)" }}>
                       {formatMoney(m.utilizado)}
                     </td>
                     <td
                       style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                        color: saldo < 0 ? "#E24B4A" : "#1D9E75",
+                        ...S.td,
+                        color: saldo < 0 ? "var(--red)" : "var(--green)",
                         fontWeight: 600,
                       }}
                     >
                       {formatMoney(saldo)}
                     </td>
-                    <td
-                      style={{
-                        padding: "10px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                      }}
-                    >
+                    <td style={S.td}>
                       <span
                         style={{
                           background: st.bg,
@@ -406,6 +345,23 @@ export default function MateriaisPage() {
                       >
                         {st.label}
                       </span>
+                    </td>
+                    <td style={S.td}>
+                      <button
+                        onClick={() => setConfirmDelete(m.id)}
+                        style={{
+                          background: "#FCEBEB",
+                          color: "#791F1F",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "4px 8px",
+                          fontSize: "11px",
+                          cursor: "pointer",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        🗑️
+                      </button>
                     </td>
                   </tr>
                 );

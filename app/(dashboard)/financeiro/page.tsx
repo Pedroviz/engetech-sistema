@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import * as S from "@/lib/styles";
 
 interface Obra {
   id: string;
@@ -17,10 +18,6 @@ interface Lancamento {
   obra: Obra;
 }
 
-function formatMoney(v: number) {
-  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
 const CATEGORIAS = [
   "recebimento",
   "material",
@@ -28,22 +25,10 @@ const CATEGORIAS = [
   "esporadico",
   "outro",
 ];
-const lbl: React.CSSProperties = {
-  fontSize: "12px",
-  color: "#666",
-  display: "block",
-  marginBottom: "5px",
-};
-const inp: React.CSSProperties = {
-  width: "100%",
-  border: "1px solid #e0e0e0",
-  borderRadius: "8px",
-  padding: "8px 10px",
-  fontSize: "13px",
-  fontFamily: "inherit",
-  background: "#fff",
-  outline: "none",
-};
+
+function formatMoney(v: number) {
+  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
 
 export default function FinanceiroPage() {
   const [lancamentos, setLancamentos] = useState<Lancamento[]>([]);
@@ -51,6 +36,7 @@ export default function FinanceiroPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [form, setForm] = useState({
     descricao: "",
     obraId: "",
@@ -60,47 +46,22 @@ export default function FinanceiroPage() {
     data: "",
   });
 
-  async function fetchData() {
-    const [lRes, oRes] = await Promise.all([
-      fetch("/api/lancamentos"),
-      fetch("/api/obras"),
+  const loadData = useCallback(async () => {
+    const [l, o] = await Promise.all([
+      fetch("/api/lancamentos").then((r) => r.json()),
+      fetch("/api/obras").then((r) => r.json()),
     ]);
-    return {
-      lancamentos: await lRes.json(),
-      obras: await oRes.json(),
-    };
-  }
-
-  async function loadData() {
-    const { lancamentos, obras } = await fetchData();
-    setLancamentos(lancamentos);
-    setObras(obras);
+    setLancamentos(Array.isArray(l) ? l : []);
+    setObras(Array.isArray(o) ? o : []);
     setLoading(false);
-  }
-
-  useEffect(() => {
-    let active = true;
-
-    async function init() {
-      const { lancamentos, obras } = await fetchData();
-      if (!active) return;
-      setLancamentos(lancamentos);
-      setObras(obras);
-      setLoading(false);
-    }
-
-    init();
-
-    return () => {
-      active = false;
-    };
   }, []);
 
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  }
+  useEffect(() => {
+    async function fetchInitialData() {
+      await loadData();
+    }
+    fetchInitialData();
+  }, [loadData]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -123,6 +84,12 @@ export default function FinanceiroPage() {
     loadData();
   }
 
+  async function excluir(id: string) {
+    await fetch(`/api/lancamentos/${id}`, { method: "DELETE" });
+    setConfirmDelete(null);
+    loadData();
+  }
+
   const entradas = lancamentos
     .filter((l) => l.tipo === "entrada")
     .reduce((a, l) => a + l.valor, 0);
@@ -131,11 +98,61 @@ export default function FinanceiroPage() {
     .reduce((a, l) => a + l.valor, 0);
   const saldo = entradas - saidas;
 
-  if (loading) return <div style={{ color: "#888" }}>Carregando...</div>;
+  if (loading)
+    return <div style={{ color: "var(--text-muted)" }}>Carregando...</div>;
 
   return (
     <div>
-      {/* Métricas */}
+      {confirmDelete && (
+        <div style={S.modal}>
+          <div style={{ ...S.modalBox, width: "360px" }}>
+            <h3
+              style={{
+                fontSize: "15px",
+                fontWeight: 600,
+                marginBottom: "8px",
+                color: "var(--text-primary)",
+              }}
+            >
+              🗑️ Excluir lançamento?
+            </h3>
+            <p
+              style={{
+                fontSize: "13px",
+                color: "var(--text-secondary)",
+                marginBottom: "20px",
+              }}
+            >
+              Esta ação não pode ser desfeita.
+            </p>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                onClick={() => excluir(confirmDelete)}
+                style={{
+                  background: "var(--red)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "9px 20px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                Sim, excluir
+              </button>
+              <button
+                onClick={() => setConfirmDelete(null)}
+                style={S.btnSecondary}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
         style={{
           display: "grid",
@@ -148,32 +165,24 @@ export default function FinanceiroPage() {
           {
             label: "Total entradas",
             value: formatMoney(entradas),
-            color: "#1D9E75",
+            color: "var(--green)",
           },
           {
             label: "Total saídas",
             value: formatMoney(saidas),
-            color: "#E24B4A",
+            color: "var(--red)",
           },
           {
             label: "Saldo",
             value: formatMoney(saldo),
-            color: saldo >= 0 ? "#185FA5" : "#E24B4A",
+            color: saldo >= 0 ? "var(--blue)" : "var(--red)",
           },
         ].map((m) => (
-          <div
-            key={m.label}
-            style={{
-              background: "#fff",
-              border: "1px solid #e0e0e0",
-              borderRadius: "10px",
-              padding: "14px 16px",
-            }}
-          >
+          <div key={m.label} style={S.metricCard}>
             <div
               style={{
                 fontSize: "11px",
-                color: "#888",
+                color: "var(--text-secondary)",
                 marginBottom: "4px",
                 textTransform: "uppercase",
                 letterSpacing: "0.04em",
@@ -198,15 +207,8 @@ export default function FinanceiroPage() {
         <button
           onClick={() => setShowForm(!showForm)}
           style={{
-            background: "#185FA5",
-            color: "#fff",
-            border: "none",
-            borderRadius: "8px",
-            padding: "9px 16px",
-            fontSize: "13px",
-            fontWeight: 600,
-            cursor: "pointer",
-            fontFamily: "inherit",
+            ...S.btnPrimary,
+            background: showForm ? "var(--text-muted)" : "var(--blue)",
           }}
         >
           {showForm ? "Cancelar" : "+ Novo Lançamento"}
@@ -214,17 +216,14 @@ export default function FinanceiroPage() {
       </div>
 
       {showForm && (
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #e0e0e0",
-            borderRadius: "10px",
-            padding: "20px",
-            marginBottom: "16px",
-          }}
-        >
+        <div style={{ ...S.card, marginBottom: "16px" }}>
           <h3
-            style={{ fontSize: "14px", fontWeight: 600, marginBottom: "16px" }}
+            style={{
+              fontSize: "14px",
+              fontWeight: 600,
+              marginBottom: "16px",
+              color: "var(--text-primary)",
+            }}
           >
             Novo Lançamento
           </h3>
@@ -237,24 +236,26 @@ export default function FinanceiroPage() {
               }}
             >
               <div>
-                <label style={lbl}>Descrição</label>
+                <label style={S.label}>Descrição</label>
                 <input
-                  name="descricao"
                   value={form.descricao}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, descricao: e.target.value }))
+                  }
                   required
                   placeholder="Descreva o lançamento"
-                  style={inp}
+                  style={S.input}
                 />
               </div>
               <div>
-                <label style={lbl}>Obra</label>
+                <label style={S.label}>Obra</label>
                 <select
-                  name="obraId"
                   value={form.obraId}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, obraId: e.target.value }))
+                  }
                   required
-                  style={inp}
+                  style={S.input}
                 >
                   <option value="">Selecione...</option>
                   {obras.map((o) => (
@@ -265,24 +266,26 @@ export default function FinanceiroPage() {
                 </select>
               </div>
               <div>
-                <label style={lbl}>Tipo</label>
+                <label style={S.label}>Tipo</label>
                 <select
-                  name="tipo"
                   value={form.tipo}
-                  onChange={handleChange}
-                  style={inp}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, tipo: e.target.value }))
+                  }
+                  style={S.input}
                 >
                   <option value="entrada">Entrada</option>
                   <option value="saida">Saída</option>
                 </select>
               </div>
               <div>
-                <label style={lbl}>Categoria</label>
+                <label style={S.label}>Categoria</label>
                 <select
-                  name="categoria"
                   value={form.categoria}
-                  onChange={handleChange}
-                  style={inp}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, categoria: e.target.value }))
+                  }
+                  style={S.input}
                 >
                   {CATEGORIAS.map((c) => (
                     <option key={c} value={c}>
@@ -292,25 +295,27 @@ export default function FinanceiroPage() {
                 </select>
               </div>
               <div>
-                <label style={lbl}>Valor (R$)</label>
+                <label style={S.label}>Valor (R$)</label>
                 <input
-                  name="valor"
                   type="number"
                   value={form.valor}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, valor: e.target.value }))
+                  }
                   required
                   placeholder="0,00"
-                  style={inp}
+                  style={S.input}
                 />
               </div>
               <div>
-                <label style={lbl}>Data</label>
+                <label style={S.label}>Data</label>
                 <input
-                  name="data"
                   type="date"
                   value={form.data}
-                  onChange={handleChange}
-                  style={inp}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, data: e.target.value }))
+                  }
+                  style={S.input}
                 />
               </div>
             </div>
@@ -318,16 +323,9 @@ export default function FinanceiroPage() {
               type="submit"
               disabled={saving}
               style={{
+                ...S.btnPrimary,
                 marginTop: "16px",
-                background: saving ? "#93c0e8" : "#185FA5",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                padding: "10px 20px",
-                fontSize: "13px",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "inherit",
+                opacity: saving ? 0.6 : 1,
               }}
             >
               {saving ? "Salvando..." : "Salvar Lançamento"}
@@ -336,38 +334,14 @@ export default function FinanceiroPage() {
         </div>
       )}
 
-      <div
-        style={{
-          background: "#fff",
-          border: "1px solid #e0e0e0",
-          borderRadius: "10px",
-          padding: "18px 20px",
-        }}
-      >
-        <h3
-          style={{
-            fontSize: "11px",
-            fontWeight: 600,
-            color: "#888",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            marginBottom: "14px",
-          }}
-        >
-          Lançamentos
-        </h3>
+      <div style={S.card}>
+        <h3 style={S.cardTitle}>Lançamentos</h3>
         {lancamentos.length === 0 ? (
-          <p style={{ fontSize: "13px", color: "#aaa" }}>
+          <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
             Nenhum lançamento registrado.
           </p>
         ) : (
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: "13px",
-            }}
-          >
+          <table style={S.table}>
             <thead>
               <tr>
                 {[
@@ -377,18 +351,9 @@ export default function FinanceiroPage() {
                   "Categoria",
                   "Tipo",
                   "Valor",
+                  "",
                 ].map((h) => (
-                  <th
-                    key={h}
-                    style={{
-                      textAlign: "left",
-                      padding: "0 0 10px 0",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      color: "#888",
-                      borderBottom: "1px solid #e0e0e0",
-                    }}
-                  >
+                  <th key={h} style={S.th}>
                     {h}
                   </th>
                 ))}
@@ -397,48 +362,15 @@ export default function FinanceiroPage() {
             <tbody>
               {lancamentos.map((l) => (
                 <tr key={l.id}>
-                  <td
-                    style={{
-                      padding: "10px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                      color: "#888",
-                    }}
-                  >
+                  <td style={{ ...S.td, color: "var(--text-secondary)" }}>
                     {new Date(l.data).toLocaleDateString("pt-BR")}
                   </td>
-                  <td
-                    style={{
-                      padding: "10px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {l.descricao}
-                  </td>
-                  <td
-                    style={{
-                      padding: "10px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                      color: "#555",
-                    }}
-                  >
-                    {l.obra?.centroCusto}
-                  </td>
-                  <td
-                    style={{
-                      padding: "10px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                      color: "#555",
-                    }}
-                  >
+                  <td style={{ ...S.td, fontWeight: 600 }}>{l.descricao}</td>
+                  <td style={S.td}>{l.obra?.centroCusto}</td>
+                  <td style={{ ...S.td, color: "var(--text-secondary)" }}>
                     {l.categoria.replace("_", " ")}
                   </td>
-                  <td
-                    style={{
-                      padding: "10px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                    }}
-                  >
+                  <td style={S.td}>
                     <span
                       style={{
                         background:
@@ -455,14 +387,31 @@ export default function FinanceiroPage() {
                   </td>
                   <td
                     style={{
-                      padding: "10px 0",
-                      borderBottom: "1px solid #f0f0f0",
+                      ...S.td,
                       fontWeight: 600,
-                      color: l.tipo === "entrada" ? "#1D9E75" : "#E24B4A",
+                      color:
+                        l.tipo === "entrada" ? "var(--green)" : "var(--red)",
                     }}
                   >
                     {l.tipo === "entrada" ? "+" : "-"}
                     {formatMoney(l.valor)}
+                  </td>
+                  <td style={S.td}>
+                    <button
+                      onClick={() => setConfirmDelete(l.id)}
+                      style={{
+                        background: "#FCEBEB",
+                        color: "#791F1F",
+                        border: "none",
+                        borderRadius: "6px",
+                        padding: "4px 8px",
+                        fontSize: "11px",
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      🗑️
+                    </button>
                   </td>
                 </tr>
               ))}
