@@ -24,7 +24,7 @@ export async function GET(
           { status: 404 },
         );
       return NextResponse.json(rdo);
-    } catch (error) {
+    } catch {
       return NextResponse.json({ error: "Erro interno" }, { status: 500 });
     }
   });
@@ -42,7 +42,7 @@ export async function DELETE(
       await prisma.rDOFoto.deleteMany({ where: { rdoId: id } });
       await prisma.rDO.delete({ where: { id } });
       return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch {
       return NextResponse.json({ error: "Erro interno" }, { status: 500 });
     }
   });

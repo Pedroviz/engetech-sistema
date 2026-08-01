@@ -55,7 +55,7 @@ model Obra {
   cliente         Cliente           @relation(fields: [clienteId], references: [id])
   ocorrencias     Ocorrencia[]
   pagamentos      Pagamento[]
-  rdos            RDO[]
+  rdos            Rdo[]
 }
 
 model Fornecedor {
@@ -190,48 +190,48 @@ model Ocorrencia {
   obra       Obra     @relation(fields: [obraId], references: [id])
 }
 
-model RDO {
-  id          String   @id @default(cuid())
+model Rdo {
+  id          String        @id @default(cuid())
   obraId      String
-  obra        Obra     @relation(fields: [obraId], references: [id])
-  data        DateTime @default(now())
-  clima       String   // ensolarado, nublado, chuvoso, parcialmente_nublado
+  obra        Obra          @relation(fields: [obraId], references: [id])
+  data        DateTime      @default(now())
+  clima       String
   tempMax     Float?
   tempMin     Float?
   anotacoes   String?
   ocorrencias String?
   userId      String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  equipe      RDOEquipe[]
-  atividades  RDOAtividade[]
-  fotos       RDOFoto[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  equipe      RdoEquipe[]
+  atividades  RdoAtividade[]
+  fotos       RdoFoto[]
 }
 
-model RDOEquipe {
-  id       String @id @default(cuid())
+model RdoEquipe {
+  id       String  @id @default(cuid())
   rdoId    String
-  rdo      RDO    @relation(fields: [rdoId], references: [id])
+  rdo      Rdo     @relation(fields: [rdoId], references: [id])
   nome     String
   funcao   String
   presente Boolean @default(true)
   horas    Float   @default(8)
 }
 
-model RDOAtividade {
-  id         String @id @default(cuid())
-  rdoId      String
-  rdo        RDO    @relation(fields: [rdoId], references: [id])
-  descricao  String
-  etapa      String?
+model RdoAtividade {
+  id        String  @id @default(cuid())
+  rdoId     String
+  rdo       Rdo     @relation(fields: [rdoId], references: [id])
+  descricao String
+  etapa     String?
   percentual Int    @default(0)
-  status     String @default("executado")
+  status    String  @default("executado")
 }
 
-model RDOFoto {
+model RdoFoto {
   id        String   @id @default(cuid())
   rdoId     String
-  rdo       RDO      @relation(fields: [rdoId], references: [id])
+  rdo       Rdo      @relation(fields: [rdoId], references: [id])
   url       String
   descricao String?
   etapa     String?

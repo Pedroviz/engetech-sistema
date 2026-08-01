@@ -23,10 +23,36 @@ export async function GET(request: NextRequest) {
   });
 }
 
+type RdoEquipeItem = {
+  nome: string;
+  funcao: string;
+  presente?: boolean;
+  horas?: number | string;
+};
+
+type RdoAtividadeItem = {
+  descricao: string;
+  etapa?: string | null;
+  percentual?: number | string;
+  status?: string;
+};
+
+type RdoCreateBody = {
+  obraId: string;
+  data?: string;
+  clima?: string;
+  tempMax?: number | string;
+  tempMin?: number | string;
+  anotacoes?: string | null;
+  ocorrencias?: string | null;
+  equipe?: RdoEquipeItem[];
+  atividades?: RdoAtividadeItem[];
+};
+
 export async function POST(request: NextRequest) {
   return withAuth(request, async () => {
     try {
-      const body = await request.json();
+      const body = (await request.json()) as RdoCreateBody;
 
       const rdo = await prisma.rDO.create({
         data: {
@@ -38,7 +64,7 @@ export async function POST(request: NextRequest) {
           anotacoes: body.anotacoes || null,
           ocorrencias: body.ocorrencias || null,
           equipe: {
-            create: (body.equipe || []).map((e: any) => ({
+            create: (body.equipe || []).map((e) => ({
               nome: e.nome,
               funcao: e.funcao,
               presente: e.presente ?? true,
@@ -46,7 +72,7 @@ export async function POST(request: NextRequest) {
             })),
           },
           atividades: {
-            create: (body.atividades || []).map((a: any) => ({
+            create: (body.atividades || []).map((a) => ({
               descricao: a.descricao,
               etapa: a.etapa || null,
               percentual: Number(a.percentual || 0),

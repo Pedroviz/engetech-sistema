@@ -116,7 +116,10 @@ export default function RDOPage() {
   }
 
   useEffect(() => {
-    loadData();
+    const init = async () => {
+      await loadData();
+    };
+    init();
   }, []);
 
   function addMembro() {
@@ -128,7 +131,11 @@ export default function RDOPage() {
   function removeMembro(i: number) {
     setEquipe((p) => p.filter((_, idx) => idx !== i));
   }
-  function updateMembro(i: number, field: string, value: any) {
+  function updateMembro(
+    i: number,
+    field: keyof MembroEquipe,
+    value: string | boolean | number,
+  ) {
     setEquipe((p) =>
       p.map((m, idx) => (idx === i ? { ...m, [field]: value } : m)),
     );
@@ -143,7 +150,11 @@ export default function RDOPage() {
   function removeAtividade(i: number) {
     setAtividades((p) => p.filter((_, idx) => idx !== i));
   }
-  function updateAtividade(i: number, field: string, value: any) {
+  function updateAtividade(
+    i: number,
+    field: keyof Atividade,
+    value: string | number,
+  ) {
     setAtividades((p) =>
       p.map((a, idx) => (idx === i ? { ...a, [field]: value } : a)),
     );
