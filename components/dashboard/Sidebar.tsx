@@ -14,6 +14,7 @@ const menuItems = [
   { href: "/materiais", label: "Materiais", icon: "🧱" },
   { href: "/diaristas", label: "Diaristas", icon: "👷" },
   { href: "/gastos", label: "Gastos", icon: "⚡" },
+  { href: "/rdo", label: "Diário de Obra", icon: "📝" },
 ];
 
 interface SidebarProps {

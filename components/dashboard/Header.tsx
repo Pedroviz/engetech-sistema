@@ -12,6 +12,7 @@ const titles: Record<string, string> = {
   "/materiais": "Materiais",
   "/diaristas": "Diaristas",
   "/gastos": "Gastos Esporádicos",
+  "/rdo": "Diário de Obra (RDO)",
 };
 
 export default function Header() {
