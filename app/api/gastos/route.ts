@@ -8,7 +8,7 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(gastos);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       include: { obra: true },
     });
     return NextResponse.json(gasto, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }

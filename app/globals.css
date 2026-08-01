@@ -46,3 +46,35 @@ body {
     background 0.2s,
     color 0.2s;
 }
+/* ===== RESPONSIVO MOBILE ===== */
+@media (max-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  .metrics-grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+  .chart-row {
+    grid-template-columns: 1fr !important;
+  }
+  .form-2col {
+    grid-template-columns: 1fr !important;
+  }
+  .form-full {
+    grid-column: 1 !important;
+  }
+  .cards-2col {
+    grid-template-columns: 1fr !important;
+  }
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .hide-mobile {
+    display: none !important;
+  }
+  main {
+    padding: 12px !important;
+  }
+}

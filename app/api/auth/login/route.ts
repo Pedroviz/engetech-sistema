@@ -6,6 +6,13 @@ export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
 
+    if (!email || !password) {
+      return NextResponse.json(
+        { error: "Email e senha obrigatórios" },
+        { status: 400 },
+      );
+    }
+
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
@@ -22,6 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = generateToken(user.id, user.email);
+    const isProduction = process.env.NODE_ENV === "production";
 
     const response = NextResponse.json({
       user: {
@@ -36,7 +44,7 @@ export async function POST(request: NextRequest) {
       name: "engetech-token",
       value: token,
       httpOnly: true,
-      secure: false,
+      secure: isProduction,
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7,
       path: "/",

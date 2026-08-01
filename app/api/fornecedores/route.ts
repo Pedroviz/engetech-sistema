@@ -1,38 +1,39 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { withAuth } from '@/lib/authMiddleware'
+import { fornecedorSchema } from '@/lib/schemas'
 
-export async function GET() {
-  try {
-    const fornecedores = await prisma.fornecedor.findMany({
-      include: { itens: true },
-      orderBy: { createdAt: "desc" },
-    });
-    return NextResponse.json(fornecedores);
-  } catch (error) {
-    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
-  }
+export async function GET(request: NextRequest) {
+  return withAuth(request, async () => {
+    try {
+      const fornecedores = await prisma.fornecedor.findMany({
+        include: { itens: true },
+        orderBy: { createdAt: 'desc' }
+      })
+      return NextResponse.json(fornecedores)
+    } catch (error) {
+      return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
+    }
+  })
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const data = await request.json();
-    const fornecedor = await prisma.fornecedor.create({
-      data: {
-        razaoSocial: data.razaoSocial,
-        cnpj: data.cnpj,
-        categoria: data.categoria,
-        pedidoMinimo: Number(data.pedidoMinimo || 0),
-        telefone: data.telefone,
-        email: data.email,
-        vendedor: data.vendedor,
-        condicaoPagto: data.condicaoPagto,
-        endereco: data.endereco,
-        cidade: data.cidade,
-        materiais: data.materiais,
-      },
-    });
-    return NextResponse.json(fornecedor, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
-  }
+  return withAuth(request, async () => {
+    try {
+      const body = await request.json()
+      const result = fornecedorSchema.safeParse({ ...body, pedidoMinimo: Number(body.pedidoMinimo || 0) })
+
+      if (!result.success) {
+        return NextResponse.json(
+          { error: 'Dados inválidos', detalhes: result.error.issues },
+          { status: 400 }
+        )
+      }
+
+      const fornecedor = await prisma.fornecedor.create({ data: result.data })
+      return NextResponse.json(fornecedor, { status: 201 })
+    } catch (error) {
+      return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
+    }
+  })
 }
