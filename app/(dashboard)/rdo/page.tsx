@@ -116,7 +116,10 @@ export default function RDOPage() {
   }
 
   useEffect(() => {
-    loadData();
+    async function init() {
+      await loadData();
+    }
+    init();
   }, []);
 
   function addMembro() {
