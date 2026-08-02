@@ -116,10 +116,7 @@ export default function RDOPage() {
   }
 
   useEffect(() => {
-    const init = async () => {
-      await loadData();
-    };
-    init();
+    loadData();
   }, []);
 
   function addMembro() {
@@ -131,11 +128,7 @@ export default function RDOPage() {
   function removeMembro(i: number) {
     setEquipe((p) => p.filter((_, idx) => idx !== i));
   }
-  function updateMembro(
-    i: number,
-    field: keyof MembroEquipe,
-    value: string | boolean | number,
-  ) {
+  function updateMembro(i: number, field: string, value: any) {
     setEquipe((p) =>
       p.map((m, idx) => (idx === i ? { ...m, [field]: value } : m)),
     );
@@ -150,11 +143,7 @@ export default function RDOPage() {
   function removeAtividade(i: number) {
     setAtividades((p) => p.filter((_, idx) => idx !== i));
   }
-  function updateAtividade(
-    i: number,
-    field: keyof Atividade,
-    value: string | number,
-  ) {
+  function updateAtividade(i: number, field: string, value: any) {
     setAtividades((p) =>
       p.map((a, idx) => (idx === i ? { ...a, [field]: value } : a)),
     );
@@ -727,8 +716,7 @@ export default function RDOPage() {
             Nenhum RDO registrado
           </div>
           <div style={{ fontSize: "13px", marginTop: "6px" }}>
-            Clique em &quot;Novo RDO&quot; para registrar o primeiro diário de
-            obra
+            Clique em "Novo RDO" para registrar o primeiro diário de obra
           </div>
         </div>
       ) : (
