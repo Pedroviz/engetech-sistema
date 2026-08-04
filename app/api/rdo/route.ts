@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   return withAuth(request, async () => {
     try {
       const obraId = request.nextUrl.searchParams.get("obraId");
-      const rdos = await prisma.RDO.findMany({
+      const rdos = await prisma.rDO.findMany({
         where: obraId ? { obraId } : {},
         include: {
           obra: { include: { cliente: true } },
