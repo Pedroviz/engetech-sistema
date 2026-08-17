@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff, Sun, Moon, HardHat } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,11 +11,15 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isDark, setIsDark] = useState(() => {
+  const [isDark, setIsDark] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+
     const saved = localStorage.getItem("engetech-theme");
-    return saved ? saved === "dark" : mq.matches;
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+
+    return saved ? saved === "dark" : prefersDark;
   });
 
   useEffect(() => {
@@ -38,21 +43,17 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
       const data = await res.json();
-
       if (!res.ok) {
         setError(data.error || "Erro ao fazer login");
         return;
       }
-
       router.push("/dashboard");
     } catch {
       setError("Erro de conexão com o servidor");
@@ -61,6 +62,19 @@ export default function LoginPage() {
     }
   }
 
+  const inp: React.CSSProperties = {
+    width: "100%",
+    border: "1px solid var(--border-input)",
+    borderRadius: "var(--radius-sm)",
+    padding: "10px 12px",
+    fontSize: "14px",
+    fontFamily: "inherit",
+    background: "var(--bg-input)",
+    color: "var(--text-primary)",
+    outline: "none",
+    transition: "border-color 150ms, box-shadow 150ms",
+  };
+
   return (
     <div
       style={{
@@ -68,71 +82,93 @@ export default function LoginPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "var(--bg-secondary)",
-        transition: "background 0.2s",
+        background: "var(--bg-app)",
+        transition: "background var(--transition-slow)",
       }}
     >
-      {/* Botão de tema */}
+      {/* Botão tema */}
       <button
         onClick={toggleTheme}
         style={{
           position: "fixed",
           top: "16px",
           right: "16px",
-          background: "var(--bg-primary)",
+          background: "var(--bg-card)",
           border: "1px solid var(--border)",
-          borderRadius: "20px",
-          padding: "6px 12px",
+          borderRadius: "var(--radius-full)",
+          padding: "8px",
           cursor: "pointer",
-          fontSize: "14px",
           color: "var(--text-secondary)",
-          transition: "all 0.2s",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "var(--shadow-sm)",
+          transition: "all var(--transition)",
         }}
       >
-        {isDark ? "☀️" : "🌙"}
+        {isDark ? <Sun size={16} /> : <Moon size={16} />}
       </button>
 
+      {/* Card de login */}
       <div
         style={{
-          background: "var(--bg-primary)",
+          background: "var(--bg-card)",
           border: "1px solid var(--border)",
-          borderRadius: "12px",
-          padding: "36px",
-          width: "340px",
-          boxShadow: "var(--shadow)",
-          transition: "background 0.2s, border-color 0.2s",
+          borderRadius: "var(--radius-lg)",
+          padding: "40px 36px",
+          width: "360px",
+          maxWidth: "95vw",
+          boxShadow: "var(--shadow-lg)",
+          animation: "modalIn 300ms ease",
         }}
       >
-        <div style={{ marginBottom: "6px" }}>
-          <span
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: "28px" }}>
+          <div
             style={{
-              fontSize: "22px",
-              fontWeight: 700,
-              color: "var(--text-primary)",
+              width: "48px",
+              height: "48px",
+              borderRadius: "var(--radius)",
+              background: "var(--primary-light)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 14px",
             }}
           >
-            <span style={{ color: "var(--blue)" }}>Engetech</span> Soluções
-          </span>
+            <HardHat size={24} color="var(--primary)" />
+          </div>
+          <div
+            style={{
+              fontSize: "20px",
+              fontWeight: 700,
+              letterSpacing: "-0.3px",
+            }}
+          >
+            <span style={{ color: "var(--primary)" }}>Engetech</span>
+            <span style={{ color: "var(--text-primary)" }}> Soluções</span>
+          </div>
+          <div
+            style={{
+              fontSize: "13px",
+              color: "var(--text-muted)",
+              marginTop: "4px",
+            }}
+          >
+            Sistema de gestão de obras
+          </div>
         </div>
-        <p
-          style={{
-            fontSize: "13px",
-            color: "var(--text-muted)",
-            marginBottom: "28px",
-          }}
-        >
-          Sistema de gestão de obras — desde 2017
-        </p>
 
         <form onSubmit={handleSubmit}>
           {/* Email */}
           <div style={{ marginBottom: "14px" }}>
             <label
               style={{
-                fontSize: "12px",
+                fontSize: "13px",
+                fontWeight: 500,
                 color: "var(--text-secondary)",
                 display: "block",
-                marginBottom: "5px",
+                marginBottom: "6px",
               }}
             >
               E-mail
@@ -142,29 +178,20 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              style={{
-                width: "100%",
-                border: "1px solid var(--border)",
-                borderRadius: "8px",
-                padding: "9px 12px",
-                fontSize: "13px",
-                outline: "none",
-                fontFamily: "inherit",
-                background: "var(--bg-primary)",
-                color: "var(--text-primary)",
-                transition: "border-color 0.2s, background 0.2s",
-              }}
+              style={inp}
+              placeholder="seu@email.com"
             />
           </div>
 
-          {/* Senha com olho */}
+          {/* Senha */}
           <div style={{ marginBottom: "20px" }}>
             <label
               style={{
-                fontSize: "12px",
+                fontSize: "13px",
+                fontWeight: 500,
                 color: "var(--text-secondary)",
                 display: "block",
-                marginBottom: "5px",
+                marginBottom: "6px",
               }}
             >
               Senha
@@ -176,85 +203,44 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="••••••••"
-                style={{
-                  width: "100%",
-                  border: "1px solid var(--border)",
-                  borderRadius: "8px",
-                  padding: "9px 40px 9px 12px",
-                  fontSize: "13px",
-                  outline: "none",
-                  fontFamily: "inherit",
-                  background: "var(--bg-primary)",
-                  color: "var(--text-primary)",
-                  transition: "border-color 0.2s, background 0.2s",
-                }}
+                style={{ ...inp, paddingRight: "42px" }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
                   position: "absolute",
-                  right: "10px",
+                  right: "12px",
                   top: "50%",
                   transform: "translateY(-50%)",
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  padding: "2px",
                   color: "var(--text-muted)",
-                  fontSize: "16px",
-                  lineHeight: 1,
+                  padding: "2px",
                   display: "flex",
                   alignItems: "center",
                 }}
-                title={showPassword ? "Ocultar senha" : "Mostrar senha"}
               >
-                {showPassword ? (
-                  // Olho fechado
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                    <line x1="1" y1="1" x2="23" y2="23" />
-                  </svg>
-                ) : (
-                  // Olho aberto
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                )}
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
+          {/* Erro */}
           {error && (
             <div
               style={{
-                background: "#FCEBEB",
-                border: "1px solid #f5c6c6",
-                borderRadius: "8px",
-                padding: "9px 12px",
-                fontSize: "12px",
-                color: "#791F1F",
+                background: "var(--danger-light)",
+                border: "1px solid var(--danger)",
+                borderRadius: "var(--radius-sm)",
+                padding: "10px 12px",
+                fontSize: "13px",
+                color: "var(--danger-text)",
                 marginBottom: "14px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
               }}
             >
               ⚠ {error}
@@ -266,16 +252,19 @@ export default function LoginPage() {
             disabled={loading}
             style={{
               width: "100%",
-              background: loading ? "#93c0e8" : "var(--blue)",
+              background: loading ? "var(--text-muted)" : "var(--primary)",
               color: "#fff",
               border: "none",
-              borderRadius: "8px",
+              borderRadius: "var(--radius-sm)",
               padding: "11px",
               fontSize: "14px",
               fontWeight: 600,
               cursor: loading ? "not-allowed" : "pointer",
               fontFamily: "inherit",
-              transition: "background 0.2s",
+              transition: "background var(--transition)",
+              boxShadow: loading
+                ? "none"
+                : "0 2px 8px hsl(213, 70%, 39%, 0.35)",
             }}
           >
             {loading ? "Entrando..." : "Entrar no sistema"}
@@ -287,7 +276,7 @@ export default function LoginPage() {
             fontSize: "11px",
             color: "var(--text-muted)",
             textAlign: "center",
-            marginTop: "16px",
+            marginTop: "20px",
           }}
         >
           Acesso restrito — Engetech Soluções LTDA

@@ -1,5 +1,128 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════
+   TOKENS HSL — TEMA CLARO
+═══════════════════════════════════════ */
+:root {
+  /* Base */
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 14px;
+  --radius-full: 9999px;
+
+  /* Cores primárias */
+  --primary-h: 213;
+  --primary-s: 70%;
+  --primary-l: 39%;
+  --primary: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
+  --primary-hover: hsl(var(--primary-h), var(--primary-s), 32%);
+  --primary-light: hsl(var(--primary-h), 70%, 95%);
+  --primary-text: hsl(var(--primary-h), 70%, 25%);
+
+  /* Superfícies */
+  --bg-app: hsl(220, 20%, 97%);
+  --bg-card: hsl(0, 0%, 100%);
+  --bg-card-hover: hsl(220, 20%, 98%);
+  --bg-input: hsl(0, 0%, 100%);
+  --bg-muted: hsl(220, 15%, 95%);
+  --bg-sidebar: hsl(0, 0%, 100%);
+
+  /* Bordas */
+  --border: hsl(220, 13%, 91%);
+  --border-strong: hsl(220, 13%, 82%);
+  --border-input: hsl(220, 13%, 87%);
+
+  /* Texto */
+  --text-primary: hsl(222, 47%, 11%);
+  --text-secondary: hsl(220, 9%, 46%);
+  --text-muted: hsl(220, 9%, 64%);
+  --text-on-primary: hsl(0, 0%, 100%);
+
+  /* Status */
+  --success-h: 158;
+  --success: hsl(var(--success-h), 64%, 38%);
+  --success-light: hsl(var(--success-h), 64%, 94%);
+  --success-text: hsl(var(--success-h), 64%, 22%);
+
+  --warning-h: 38;
+  --warning: hsl(var(--warning-h), 92%, 50%);
+  --warning-light: hsl(var(--warning-h), 92%, 94%);
+  --warning-text: hsl(var(--warning-h), 80%, 28%);
+
+  --danger-h: 0;
+  --danger: hsl(var(--danger-h), 72%, 51%);
+  --danger-light: hsl(var(--danger-h), 72%, 95%);
+  --danger-text: hsl(var(--danger-h), 72%, 30%);
+
+  --purple-h: 258;
+  --purple: hsl(var(--purple-h), 60%, 52%);
+  --purple-light: hsl(var(--purple-h), 60%, 95%);
+  --purple-text: hsl(var(--purple-h), 60%, 28%);
+
+  /* Sombras */
+  --shadow-sm:
+    0 1px 3px hsl(220, 13%, 0%, 0.08), 0 1px 2px hsl(220, 13%, 0%, 0.04);
+  --shadow-md:
+    0 4px 12px hsl(220, 13%, 0%, 0.08), 0 2px 4px hsl(220, 13%, 0%, 0.04);
+  --shadow-lg:
+    0 8px 24px hsl(220, 13%, 0%, 0.1), 0 4px 8px hsl(220, 13%, 0%, 0.06);
+  --shadow-sidebar: 1px 0 0 var(--border);
+
+  /* Transições */
+  --transition: 150ms ease;
+  --transition-slow: 250ms ease;
+}
+
+/* ═══════════════════════════════════════
+   TOKENS HSL — TEMA ESCURO
+═══════════════════════════════════════ */
+[data-theme="dark"] {
+  --primary-l: 55%;
+  --primary: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
+  --primary-hover: hsl(var(--primary-h), var(--primary-s), 62%);
+  --primary-light: hsl(var(--primary-h), 40%, 18%);
+  --primary-text: hsl(var(--primary-h), 70%, 75%);
+
+  --bg-app: hsl(222, 20%, 10%);
+  --bg-card: hsl(222, 18%, 13%);
+  --bg-card-hover: hsl(222, 18%, 15%);
+  --bg-input: hsl(222, 18%, 16%);
+  --bg-muted: hsl(222, 15%, 17%);
+  --bg-sidebar: hsl(222, 20%, 11%);
+
+  --border: hsl(222, 15%, 22%);
+  --border-strong: hsl(222, 15%, 28%);
+  --border-input: hsl(222, 15%, 25%);
+
+  --text-primary: hsl(220, 20%, 94%);
+  --text-secondary: hsl(220, 10%, 60%);
+  --text-muted: hsl(220, 10%, 42%);
+
+  --success: hsl(var(--success-h), 55%, 52%);
+  --success-light: hsl(var(--success-h), 40%, 18%);
+  --success-text: hsl(var(--success-h), 55%, 72%);
+
+  --warning: hsl(var(--warning-h), 80%, 55%);
+  --warning-light: hsl(var(--warning-h), 40%, 18%);
+  --warning-text: hsl(var(--warning-h), 80%, 72%);
+
+  --danger: hsl(var(--danger-h), 65%, 58%);
+  --danger-light: hsl(var(--danger-h), 40%, 18%);
+  --danger-text: hsl(var(--danger-h), 65%, 75%);
+
+  --purple: hsl(var(--purple-h), 55%, 65%);
+  --purple-light: hsl(var(--purple-h), 40%, 18%);
+  --purple-text: hsl(var(--purple-h), 55%, 78%);
+
+  --shadow-sm: 0 1px 3px hsl(0, 0%, 0%, 0.3);
+  --shadow-md: 0 4px 12px hsl(0, 0%, 0%, 0.35);
+  --shadow-lg: 0 8px 24px hsl(0, 0%, 0%, 0.4);
+  --shadow-sidebar: 1px 0 0 var(--border);
+}
+
+/* ═══════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════ */
 *,
 *::before,
 *::after {
@@ -8,68 +131,47 @@
   padding: 0;
 }
 
-:root {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f5f5f3;
-  --bg-tertiary: #f0f0ee;
-  --border: #e0e0e0;
-  --text-primary: #1a1a1a;
-  --text-secondary: #666666;
-  --text-muted: #aaaaaa;
-  --blue: #185fa5;
-  --green: #1d9e75;
-  --red: #e24b4a;
-  --amber: #ba7517;
-  --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-}
-
-[data-theme="dark"] {
-  --bg-primary: #1a1a1a;
-  --bg-secondary: #111111;
-  --bg-tertiary: #222222;
-  --border: #333333;
-  --text-primary: #f0f0f0;
-  --text-secondary: #aaaaaa;
-  --text-muted: #666666;
-  --blue: #4a9fd4;
-  --green: #2ec491;
-  --red: #f06b6a;
-  --amber: #e09f3e;
-  --shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: var(--bg-secondary);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  background: var(--bg-app);
   color: var(--text-primary);
   transition:
-    background 0.2s,
-    color 0.2s;
+    background var(--transition-slow),
+    color var(--transition-slow);
 }
-/* ===== RESPONSIVO MOBILE ===== */
+
+/* ═══════════════════════════════════════
+   RESPONSIVO
+═══════════════════════════════════════ */
 @media (max-width: 768px) {
-  .metrics-grid {
+  .sidebar-desktop {
+    display: none !important;
+  }
+  .main-content {
+    margin-left: 0 !important;
+  }
+  .mobile-header {
+    display: flex !important;
+  }
+  .desktop-header {
+    display: none !important;
+  }
+  .grid-cols-4 {
     grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
   }
-  .metrics-grid-3 {
+  .grid-cols-3 {
     grid-template-columns: 1fr !important;
   }
-  .chart-row {
+  .grid-cols-2 {
     grid-template-columns: 1fr !important;
-  }
-  .form-2col {
-    grid-template-columns: 1fr !important;
-  }
-  .form-full {
-    grid-column: 1 !important;
-  }
-  .cards-2col {
-    grid-template-columns: 1fr !important;
-  }
-  .table-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
   }
   .hide-mobile {
     display: none !important;
@@ -77,4 +179,97 @@ body {
   main {
     padding: 12px !important;
   }
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+.mobile-header {
+  display: none;
+  height: 56px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  padding: 0 16px;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 99;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ═══════════════════════════════════════
+   ANIMAÇÕES
+═══════════════════════════════════════ */
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-fade {
+  animation: fadeIn 200ms ease forwards;
+}
+
+/* Input focus */
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px
+    hsl(var(--primary-h), var(--primary-s), var(--primary-l), 0.15) !important;
+  outline: none;
+}
+
+/* Botão hover */
+button:active {
+  transform: scale(0.98);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Sidebar link hover */
+nav a:hover {
+  background: var(--bg-muted) !important;
+  color: var(--text-primary) !important;
 }
