@@ -69,7 +69,7 @@ async function main() {
 
   console.log("✅ Seed concluído!");
   console.log("📧 Admin: admin@engetech.com.br");
-  console.log("🔑 Senha: engetech2025");
+  console.log("🔑 Senha: engetech2026");
 }
 
 main()
