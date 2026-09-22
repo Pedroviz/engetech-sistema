@@ -36,7 +36,7 @@
   --text-primary: hsl(222, 47%, 11%);
   --text-secondary: hsl(220, 9%, 46%);
   --text-muted: hsl(220, 9%, 64%);
-  --text-on-primary: hsl(0, 0%, 100%);
+  --text-on-primary: hsl(223, 7%, 19%);
 
   /* Status */
   --success-h: 158;
@@ -90,7 +90,7 @@
   --bg-muted: hsl(222, 15%, 17%);
   --bg-sidebar: hsl(222, 20%, 11%);
 
-  --border: hsl(222, 15%, 22%);
+  --border: hsl(217, 4%, 59%);
   --border-strong: hsl(222, 15%, 28%);
   --border-input: hsl(222, 15%, 25%);
 

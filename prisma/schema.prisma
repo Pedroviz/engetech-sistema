@@ -20,6 +20,7 @@ model User {
 
 model Cliente {
   id            String      @id @default(cuid())
+  tenantId      String
   nome          String
   segmento      String
   whatsapp      String?
@@ -35,7 +36,8 @@ model Cliente {
 
 model Obra {
   id              String            @id @default(cuid())
-  centroCusto     String            @unique
+  tenantId        String
+  centroCusto     String
   clienteId       String
   cliente         Cliente           @relation(fields: [clienteId], references: [id])
   tipo            String
@@ -58,12 +60,17 @@ model Obra {
   etapas          Etapa[]
   ocorrencias     Ocorrencia[]
   rdos            RDO[]
+  portalToken   String?              @unique
+  portalAtivo   Boolean              @default(false)
+  portalTitulo  String?
+  endereco      String?
 }
 
 model Fornecedor {
   id            String     @id @default(cuid())
+  tenantId      String
   razaoSocial   String
-  cnpj          String     @unique
+  cnpj          String
   categoria     String
   pedidoMinimo  Float      @default(0)
   telefone      String?
@@ -80,7 +87,8 @@ model Fornecedor {
 
 model Orcamento {
   id          String   @id @default(cuid())
-  numero      String   @unique
+  tenantId    String
+  numero      String
   clienteId   String
   cliente     Cliente  @relation(fields: [clienteId], references: [id])
   valor       Float
@@ -93,6 +101,7 @@ model Orcamento {
 
 model Diarista {
   id         String      @id @default(cuid())
+  tenantId   String
   nome       String
   funcao     String
   telefone   String?
@@ -101,6 +110,7 @@ model Diarista {
   createdAt  DateTime    @default(now())
   pagamentos Pagamento[]
 }
+
 
 model Pagamento {
   id         String   @id @default(cuid())
@@ -117,6 +127,7 @@ model Pagamento {
 
 model Material {
   id           String      @id @default(cuid())
+  tenantId     String
   nome         String
   obraId       String
   obra         Obra        @relation(fields: [obraId], references: [id])
@@ -130,6 +141,7 @@ model Material {
 
 model GastoEsporadico {
   id            String   @id @default(cuid())
+  tenantId      String
   descricao     String
   justificativa String
   obraId        String
@@ -141,6 +153,7 @@ model GastoEsporadico {
 
 model Lancamento {
   id        String   @id @default(cuid())
+  tenantId  String
   descricao String
   obraId    String
   obra      Obra     @relation(fields: [obraId], references: [id])
@@ -150,6 +163,7 @@ model Lancamento {
   data      DateTime @default(now())
   createdAt DateTime @default(now())
 }
+
 
 model Etapa {
   id          String       @id @default(cuid())
@@ -194,6 +208,7 @@ model Ocorrencia {
 
 model RDO {
   id          String         @id @default(cuid())
+  tenantId    String
   obraId      String
   obra        Obra           @relation(fields: [obraId], references: [id])
   data        DateTime       @default(now())

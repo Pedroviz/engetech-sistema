@@ -1,77 +1,69 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Iniciando seed...");
-
-  // Criar usuário admin
-  const senhaHash = await bcrypt.hash("engetech2025", 12);
-
-  await prisma.user.upsert({
+  // 1. Criar ou garantir o usuário Admin
+  const admin = await prisma.user.upsert({
     where: { email: "admin@engetech.com.br" },
     update: {},
     create: {
-      email: "admin@engetech.com.br",
       name: "Administrador",
-      password: senhaHash,
-      role: "admin",
+      email: "admin@engetech.com.br",
+      password: "123", // Senha padrão para testes locais
     },
   });
 
+  // 2. Criar ou garantir o usuário Demo
   await prisma.user.upsert({
-    where: { email: "admin2@engetech.com.br" },
+    where: { email: "demo@engetech.com.br" },
     update: {},
     create: {
-      email: "admin2@engetech.com.br",
-      name: "Administrativo",
-      password: senhaHash,
-      role: "admin",
+      name: "Demo",
+      email: "demo@engetech.com.br",
+      password: "123",
     },
   });
 
-  // Criar cliente de exemplo
-  const cliente = await prisma.cliente.upsert({
-    where: { id: "cliente-001" },
-    update: {},
-    create: {
-      id: "cliente-001",
+  console.log(`✅ Usuários garantidos. Admin ID: ${admin.id}`);
+
+  // 3. Criar um cliente de exemplo vinculado ao tenant do admin
+  const cliente = await prisma.cliente.create({
+    data: {
+      tenantId: admin.id,
       nome: "Família Rodrigues",
-      segmento: "residencial",
-      whatsapp: "(85) 99999-1234",
-      email: "rodrigues@email.com",
-      classificacao: "fidelizado",
-      clienteDesde: "2019",
-      observacoes: "Reforma anual todo janeiro",
+      segmento: "Residencial",
+      whatsapp: "(11) 99999-9999",
+      email: "contato@rodrigues.com",
+      classificacao: "A",
+      observacoes: "Cliente de teste local",
     },
   });
 
-  // Criar obra de exemplo
-  await prisma.obra.upsert({
-    where: { centroCusto: "CC-001" },
-    update: {},
-    create: {
+  // 4. Criar uma obra de exemplo vinculada ao tenant e ao cliente
+  await prisma.obra.create({
+    data: {
+      tenantId: admin.id,
       centroCusto: "CC-001",
       clienteId: cliente.id,
       tipo: "residencial",
-      status: "execucao",
-      inicio: new Date("2025-01-10"),
-      previsaoFim: new Date("2025-04-30"),
-      contrato: 48000,
-      orcamentoMat: 22000,
-      orcamentoMO: 9600,
-      gastoMat: 18200,
-      gastoMO: 7400,
-      gastoEsporadico: 2800,
+      status: "andamento",
+      inicio: new Date(),
+      previsaoFim: new Date("2026-12-31"),
+      contrato: 150000,
+      orcamentoMat: 50000,
+      orcamentoMO: 40000,
     },
   });
 
-  console.log("✅ Seed concluído!");
-  console.log("📧 Admin: admin@engetech.com.br");
-  console.log("🔑 Senha: engetech2026");
+  console.log("✅ Seed executado com sucesso! Dados de teste criados.");
 }
 
 main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

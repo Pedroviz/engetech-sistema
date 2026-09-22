@@ -79,6 +79,10 @@ export default function ObrasPage() {
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [gerandoPDF, setGerandoPDF] = useState<string | null>(null);
+
+  // Estado adicionado para o link do portal
+  const [linkGerado, setLinkGerado] = useState<string | null>(null);
+
   const [form, setForm] = useState({
     centroCusto: "",
     clienteId: "",
@@ -193,6 +197,25 @@ export default function ObrasPage() {
     await fetch(`/api/obras/${id}`, { method: "DELETE" });
     setConfirmDelete(null);
     loadData();
+  }
+
+  // Função adicionada para gerar o link do portal
+  async function gerarLinkPortal(obra: Obra) {
+    const res = await fetch(`/api/obras/${obra.id}/portal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ativo: true,
+        titulo: `Reforma — ${obra.cliente?.nome}`,
+      }),
+    });
+    const data = await res.json();
+    if (data.token) {
+      const url = `${window.location.origin}/portal/${data.token}`;
+      navigator.clipboard.writeText(url);
+      setLinkGerado(url);
+      setTimeout(() => setLinkGerado(null), 4000);
+    }
   }
 
   async function gerarPDF(obra: Obra) {
@@ -578,6 +601,25 @@ export default function ObrasPage() {
                         >
                           📊 Gantt
                         </button>
+
+                        {/* Botão Portal adicionado aqui */}
+                        <button
+                          onClick={() => gerarLinkPortal(obra)}
+                          style={{
+                            background: "#EEEDFE",
+                            color: "#3C3489",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "4px 9px",
+                            fontSize: "11px",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                          }}
+                        >
+                          🔗 Portal
+                        </button>
+
                         <button
                           onClick={() => abrirEdicao(obra)}
                           style={{
@@ -637,6 +679,27 @@ export default function ObrasPage() {
           </table>
         )}
       </div>
+
+      {/* Toast de confirmação adicionado antes do </div> final */}
+      {linkGerado && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            background: "#1D9E75",
+            color: "#fff",
+            padding: "12px 18px",
+            borderRadius: "10px",
+            fontSize: "13px",
+            fontWeight: 500,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+            zIndex: 9999,
+          }}
+        >
+          ✅ Link copiado! Cole no WhatsApp do cliente.
+        </div>
+      )}
     </div>
   );
 }

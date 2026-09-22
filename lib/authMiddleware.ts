@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 
-type Handler = (req: NextRequest, userId: string) => Promise<NextResponse>;
+type Handler = (req: NextRequest, tenantId: string) => Promise<NextResponse>;
 
 export async function withAuth(
   request: NextRequest,
@@ -22,5 +22,6 @@ export async function withAuth(
     );
   }
 
+  // Passa o userId como tenantId para isolar os dados
   return handler(request, payload.userId);
 }

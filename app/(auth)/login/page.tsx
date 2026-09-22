@@ -11,6 +11,10 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // 1. Estado para controlar se o componente foi montado no cliente
+  const [mounted, setMounted] = useState(false);
+
   const [isDark, setIsDark] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
 
@@ -21,6 +25,12 @@ export default function LoginPage() {
 
     return saved ? saved === "dark" : prefersDark;
   });
+
+  // 2. useEffect para marcar como montado assim que carregar no navegador
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute(
@@ -104,9 +114,12 @@ export default function LoginPage() {
           justifyContent: "center",
           boxShadow: "var(--shadow-sm)",
           transition: "all var(--transition)",
+          width: "34px", // Adicionando tamanho fixo para evitar pulos no layout
+          height: "34px",
         }}
       >
-        {isDark ? <Sun size={16} /> : <Moon size={16} />}
+        {/* 3. Renderização condicional segura para Hydration */}
+        {mounted ? isDark ? <Sun size={16} /> : <Moon size={16} /> : null}
       </button>
 
       {/* Card de login */}

@@ -4,9 +4,10 @@ import { withAuth } from "@/lib/authMiddleware";
 import { obraSchema } from "@/lib/schemas";
 
 export async function GET(request: NextRequest) {
-  return withAuth(request, async () => {
+  return withAuth(request, async (_, tenantId) => {
     try {
       const obras = await prisma.obra.findMany({
+        where: { tenantId },
         include: { cliente: true },
         orderBy: { createdAt: "desc" },
       });
@@ -18,9 +19,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  return withAuth(request, async () => {
+  return withAuth(request, async (req, tenantId) => {
     try {
-      const body = await request.json();
+      const body = await req.json();
       const result = obraSchema.safeParse({
         ...body,
         contrato: Number(body.contrato),
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
 
       const obra = await prisma.obra.create({
         data: {
+          tenantId,
           centroCusto: result.data.centroCusto,
           clienteId: result.data.clienteId,
           tipo: result.data.tipo,
@@ -49,7 +51,6 @@ export async function POST(request: NextRequest) {
         },
         include: { cliente: true },
       });
-
       return NextResponse.json(obra, { status: 201 });
     } catch {
       return NextResponse.json({ error: "Erro interno" }, { status: 500 });

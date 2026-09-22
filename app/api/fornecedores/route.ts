@@ -4,9 +4,10 @@ import { withAuth } from "@/lib/authMiddleware";
 import { fornecedorSchema } from "@/lib/schemas";
 
 export async function GET(request: NextRequest) {
-  return withAuth(request, async () => {
+  return withAuth(request, async (_, tenantId) => {
     try {
       const fornecedores = await prisma.fornecedor.findMany({
+        where: { tenantId },
         include: { itens: true },
         orderBy: { createdAt: "desc" },
       });
@@ -18,22 +19,22 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  return withAuth(request, async () => {
+  return withAuth(request, async (req, tenantId) => {
     try {
-      const body = await request.json();
+      const body = await req.json();
       const result = fornecedorSchema.safeParse({
         ...body,
         pedidoMinimo: Number(body.pedidoMinimo || 0),
       });
-
       if (!result.success) {
         return NextResponse.json(
           { error: "Dados inválidos", detalhes: result.error.issues },
           { status: 400 },
         );
       }
-
-      const fornecedor = await prisma.fornecedor.create({ data: result.data });
+      const fornecedor = await prisma.fornecedor.create({
+        data: { ...result.data, tenantId },
+      });
       return NextResponse.json(fornecedor, { status: 201 });
     } catch {
       return NextResponse.json({ error: "Erro interno" }, { status: 500 });

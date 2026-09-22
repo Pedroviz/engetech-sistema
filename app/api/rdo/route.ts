@@ -3,11 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/authMiddleware";
 
 export async function GET(request: NextRequest) {
-  return withAuth(request, async () => {
+  return withAuth(request, async (req, tenantId) => {
     try {
-      const obraId = request.nextUrl.searchParams.get("obraId");
+      const obraId = req.nextUrl.searchParams.get("obraId");
       const rdos = await prisma.rDO.findMany({
-        where: obraId ? { obraId } : {},
+        where: { tenantId, ...(obraId ? { obraId } : {}) },
         include: {
           obra: { include: { cliente: true } },
           equipe: true,
@@ -17,18 +17,19 @@ export async function GET(request: NextRequest) {
         orderBy: { data: "desc" },
       });
       return NextResponse.json(rdos);
-    } catch (error) {
+    } catch {
       return NextResponse.json({ error: "Erro interno" }, { status: 500 });
     }
   });
 }
 
 export async function POST(request: NextRequest) {
-  return withAuth(request, async () => {
+  return withAuth(request, async (req, tenantId) => {
     try {
-      const body = await request.json();
+      const body = await req.json();
       const rdo = await prisma.rDO.create({
         data: {
+          tenantId,
           obraId: body.obraId,
           data: body.data ? new Date(body.data) : new Date(),
           clima: body.clima || "ensolarado",

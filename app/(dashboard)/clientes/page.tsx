@@ -150,7 +150,7 @@ export default function ClientesPage() {
                 onClick={() => excluir(confirmDelete)}
                 style={{
                   background: "var(--red)",
-                  color: "#fff",
+                  color: "#7713e1",
                   border: "none",
                   borderRadius: "8px",
                   padding: "9px 20px",

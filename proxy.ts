@@ -4,7 +4,11 @@ export function proxy(request: NextRequest) {
   const token = request.cookies.get("engetech-token")?.value;
   const pathname = request.nextUrl.pathname;
 
-  const isPublic = pathname === "/login" || pathname.startsWith("/api/auth");
+  const isPublic =
+    pathname === "/login" ||
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/portal") ||
+    pathname.startsWith("/api/portal");
 
   if (!token && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));
