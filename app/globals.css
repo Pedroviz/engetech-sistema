@@ -36,28 +36,40 @@
   --text-primary: hsl(222, 47%, 11%);
   --text-secondary: hsl(220, 9%, 46%);
   --text-muted: hsl(220, 9%, 64%);
-  --text-on-primary: hsl(223, 7%, 19%);
+  /* IMPORTANTE: sempre branco — garante contraste sobre qualquer botão primário (azul) */
+  --text-on-primary: hsl(0, 0%, 100%);
 
-  /* Status */
-  --success-h: 158;
-  --success: hsl(var(--success-h), 64%, 38%);
-  --success-light: hsl(var(--success-h), 64%, 94%);
-  --success-text: hsl(var(--success-h), 64%, 22%);
+  /* ── Paleta de status ──────────────────────────────────────────────────────
+     Baseada em materiais da construção civil:
+     Verde  → avanço/conclusão  (obra entregue)
+     Âmbar  → atenção/alerta    (prazo apertado, estouro orçamento)
+     Vermelho → perigo/bloqueio (obra parada, margem negativa)
+     Roxo   → informativo       (badge de tipo, ícones de destaque)
+  ── */
 
-  --warning-h: 38;
-  --warning: hsl(var(--warning-h), 92%, 50%);
-  --warning-light: hsl(var(--warning-h), 92%, 94%);
-  --warning-text: hsl(var(--warning-h), 80%, 28%);
+  --success-h: 152;
+  /* Verde mais saturado — contraste WCAG AA garantido sobre branco */
+  --success: hsl(var(--success-h), 60%, 32%);
+  --success-light: hsl(var(--success-h), 55%, 93%);
+  --success-text: hsl(var(--success-h), 60%, 20%);
 
-  --danger-h: 0;
-  --danger: hsl(var(--danger-h), 72%, 51%);
-  --danger-light: hsl(var(--danger-h), 72%, 95%);
-  --danger-text: hsl(var(--danger-h), 72%, 30%);
+  --warning-h: 36;
+  /* Âmbar escurecido — evita o amarelo puro que falha em contraste */
+  --warning: hsl(var(--warning-h), 85%, 38%);
+  --warning-light: hsl(var(--warning-h), 90%, 93%);
+  --warning-text: hsl(var(--warning-h), 85%, 22%);
+
+  --danger-h: 4;
+  /* Vermelho tijolo — referência ao material da construção */
+  --danger: hsl(var(--danger-h), 68%, 44%);
+  --danger-light: hsl(var(--danger-h), 68%, 95%);
+  --danger-text: hsl(var(--danger-h), 68%, 26%);
 
   --purple-h: 258;
-  --purple: hsl(var(--purple-h), 60%, 52%);
-  --purple-light: hsl(var(--purple-h), 60%, 95%);
-  --purple-text: hsl(var(--purple-h), 60%, 28%);
+  /* Roxo para badges informativos e ícones neutros */
+  --purple: hsl(var(--purple-h), 52%, 45%);
+  --purple-light: hsl(var(--purple-h), 52%, 94%);
+  --purple-text: hsl(var(--purple-h), 52%, 25%);
 
   /* Sombras */
   --shadow-sm:
@@ -90,7 +102,8 @@
   --bg-muted: hsl(222, 15%, 17%);
   --bg-sidebar: hsl(222, 20%, 11%);
 
-  --border: hsl(217, 4%, 59%);
+  /* Bordas escuras: lightness baixa para não competir com o conteúdo */
+  --border: hsl(222, 15%, 22%);
   --border-strong: hsl(222, 15%, 28%);
   --border-input: hsl(222, 15%, 25%);
 
@@ -98,21 +111,22 @@
   --text-secondary: hsl(220, 10%, 60%);
   --text-muted: hsl(220, 10%, 42%);
 
-  --success: hsl(var(--success-h), 55%, 52%);
-  --success-light: hsl(var(--success-h), 40%, 18%);
-  --success-text: hsl(var(--success-h), 55%, 72%);
+  /* Status escuro: cores clareadas para legibilidade sobre fundos escuros */
+  --success: hsl(var(--success-h), 50%, 52%);
+  --success-light: hsl(var(--success-h), 35%, 16%);
+  --success-text: hsl(var(--success-h), 50%, 76%);
 
-  --warning: hsl(var(--warning-h), 80%, 55%);
-  --warning-light: hsl(var(--warning-h), 40%, 18%);
-  --warning-text: hsl(var(--warning-h), 80%, 72%);
+  --warning: hsl(var(--warning-h), 75%, 55%);
+  --warning-light: hsl(var(--warning-h), 35%, 16%);
+  --warning-text: hsl(var(--warning-h), 75%, 78%);
 
-  --danger: hsl(var(--danger-h), 65%, 58%);
-  --danger-light: hsl(var(--danger-h), 40%, 18%);
-  --danger-text: hsl(var(--danger-h), 65%, 75%);
+  --danger: hsl(var(--danger-h), 62%, 56%);
+  --danger-light: hsl(var(--danger-h), 35%, 16%);
+  --danger-text: hsl(var(--danger-h), 62%, 80%);
 
-  --purple: hsl(var(--purple-h), 55%, 65%);
-  --purple-light: hsl(var(--purple-h), 40%, 18%);
-  --purple-text: hsl(var(--purple-h), 55%, 78%);
+  --purple: hsl(var(--purple-h), 52%, 65%);
+  --purple-light: hsl(var(--purple-h), 35%, 16%);
+  --purple-text: hsl(var(--purple-h), 52%, 82%);
 
   --shadow-sm: 0 1px 3px hsl(0, 0%, 0%, 0.3);
   --shadow-md: 0 4px 12px hsl(0, 0%, 0%, 0.35);

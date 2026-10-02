@@ -32,6 +32,7 @@ interface Obra {
   gastoMat: number;
   gastoMO: number;
   gastoEsporadico: number;
+  totalSaidas: number;
   cliente: { nome: string };
 }
 
@@ -187,10 +188,12 @@ export default function DashboardPage() {
   // CÁLCULOS DE MÉTRICAS GERAIS
   // --------------------------------------------------------------------------
   const receitaTotal = obras.reduce((a, o) => a + o.contrato, 0);
-  const gastoTotal = obras.reduce(
-    (a, o) => a + o.gastoMat + o.gastoMO + o.gastoEsporadico,
-    0,
-  );
+  // Soma gastos reais calculados pela API + saídas financeiras registradas
+  const gastoTotal = obras.reduce((a, o) => {
+    const gastos = o.gastoMat + o.gastoMO + o.gastoEsporadico;
+    const saidas = o.totalSaidas || 0;
+    return a + Math.max(gastos, saidas);
+  }, 0);
   const margemMedia =
     receitaTotal > 0
       ? (((receitaTotal - gastoTotal) / receitaTotal) * 100).toFixed(0)

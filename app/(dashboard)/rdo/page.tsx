@@ -1064,7 +1064,7 @@ export default function RDOPage() {
                           style={{
                             fontSize: "11px",
                             fontWeight: 600,
-                            color: "var(--amber)",
+                            color: "var(--warning)",
                             textTransform: "uppercase",
                             letterSpacing: "0.05em",
                             marginBottom: "6px",
@@ -1075,12 +1075,13 @@ export default function RDOPage() {
                         <div
                           style={{
                             fontSize: "13px",
-                            color: "var(--text-primary)",
-                            lineHeight: "1.6",
-                            background: "#FFF8ED",
-                            border: "1px solid var(--amber)",
+                            /* IMPORTANTE: usar token do tema — nunca cor hardcoded */
+                            color: "var(--warning-text)",
+                            background: "var(--warning-light)",
+                            border: "1px solid var(--warning)",
                             borderRadius: "8px",
                             padding: "10px 12px",
+                            lineHeight: 1.6,
                           }}
                         >
                           {rdo.ocorrencias}

@@ -72,9 +72,9 @@ export const label: CSSProperties = {
   marginBottom: "6px",
 };
 
-export const btnPrimary: CSSProperties = {
+export const btnPrimary: React.CSSProperties = {
   background: "var(--primary)",
-  color: "var(--text-on-primary)",
+  color: "#FFFFFF", // branco fixo — sempre legível sobre azul
   border: "none",
   borderRadius: "var(--radius-sm)",
   padding: "9px 16px",
@@ -86,13 +86,13 @@ export const btnPrimary: CSSProperties = {
   alignItems: "center",
   gap: "6px",
   transition: "background var(--transition), transform var(--transition)",
-  boxShadow: "0 1px 3px hsl(213, 70%, 39%, 0.3)",
+  boxShadow: "0 1px 3px rgba(27,95,166,0.35)",
 };
 
-export const btnSecondary: CSSProperties = {
+export const btnSecondary: React.CSSProperties = {
   background: "var(--bg-muted)",
-  color: "var(--text-secondary)",
-  border: "1px solid var(--border)",
+  color: "var(--text-primary)", // texto primário — nunca muted
+  border: "1px solid var(--border-strong)",
   borderRadius: "var(--radius-sm)",
   padding: "9px 16px",
   fontSize: "13px",
