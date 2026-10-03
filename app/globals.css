@@ -36,40 +36,28 @@
   --text-primary: hsl(222, 47%, 11%);
   --text-secondary: hsl(220, 9%, 46%);
   --text-muted: hsl(220, 9%, 64%);
-  /* IMPORTANTE: sempre branco — garante contraste sobre qualquer botão primário (azul) */
-  --text-on-primary: hsl(0, 0%, 100%);
+  --text-on-primary: hsl(223, 7%, 19%);
 
-  /* ── Paleta de status ──────────────────────────────────────────────────────
-     Baseada em materiais da construção civil:
-     Verde  → avanço/conclusão  (obra entregue)
-     Âmbar  → atenção/alerta    (prazo apertado, estouro orçamento)
-     Vermelho → perigo/bloqueio (obra parada, margem negativa)
-     Roxo   → informativo       (badge de tipo, ícones de destaque)
-  ── */
+  /* Status */
+  --success-h: 158;
+  --success: hsl(var(--success-h), 64%, 38%);
+  --success-light: hsl(var(--success-h), 64%, 94%);
+  --success-text: hsl(var(--success-h), 64%, 22%);
 
-  --success-h: 152;
-  /* Verde mais saturado — contraste WCAG AA garantido sobre branco */
-  --success: hsl(var(--success-h), 60%, 32%);
-  --success-light: hsl(var(--success-h), 55%, 93%);
-  --success-text: hsl(var(--success-h), 60%, 20%);
+  --warning-h: 38;
+  --warning: hsl(var(--warning-h), 92%, 50%);
+  --warning-light: hsl(var(--warning-h), 92%, 94%);
+  --warning-text: hsl(var(--warning-h), 80%, 28%);
 
-  --warning-h: 36;
-  /* Âmbar escurecido — evita o amarelo puro que falha em contraste */
-  --warning: hsl(var(--warning-h), 85%, 38%);
-  --warning-light: hsl(var(--warning-h), 90%, 93%);
-  --warning-text: hsl(var(--warning-h), 85%, 22%);
-
-  --danger-h: 4;
-  /* Vermelho tijolo — referência ao material da construção */
-  --danger: hsl(var(--danger-h), 68%, 44%);
-  --danger-light: hsl(var(--danger-h), 68%, 95%);
-  --danger-text: hsl(var(--danger-h), 68%, 26%);
+  --danger-h: 0;
+  --danger: hsl(var(--danger-h), 72%, 51%);
+  --danger-light: hsl(var(--danger-h), 72%, 95%);
+  --danger-text: hsl(var(--danger-h), 72%, 30%);
 
   --purple-h: 258;
-  /* Roxo para badges informativos e ícones neutros */
-  --purple: hsl(var(--purple-h), 52%, 45%);
-  --purple-light: hsl(var(--purple-h), 52%, 94%);
-  --purple-text: hsl(var(--purple-h), 52%, 25%);
+  --purple: hsl(var(--purple-h), 60%, 52%);
+  --purple-light: hsl(var(--purple-h), 60%, 95%);
+  --purple-text: hsl(var(--purple-h), 60%, 28%);
 
   /* Sombras */
   --shadow-sm:
@@ -102,8 +90,7 @@
   --bg-muted: hsl(222, 15%, 17%);
   --bg-sidebar: hsl(222, 20%, 11%);
 
-  /* Bordas escuras: lightness baixa para não competir com o conteúdo */
-  --border: hsl(222, 15%, 22%);
+  --border: hsl(217, 4%, 59%);
   --border-strong: hsl(222, 15%, 28%);
   --border-input: hsl(222, 15%, 25%);
 
@@ -111,22 +98,21 @@
   --text-secondary: hsl(220, 10%, 60%);
   --text-muted: hsl(220, 10%, 42%);
 
-  /* Status escuro: cores clareadas para legibilidade sobre fundos escuros */
-  --success: hsl(var(--success-h), 50%, 52%);
-  --success-light: hsl(var(--success-h), 35%, 16%);
-  --success-text: hsl(var(--success-h), 50%, 76%);
+  --success: hsl(var(--success-h), 55%, 52%);
+  --success-light: hsl(var(--success-h), 40%, 18%);
+  --success-text: hsl(var(--success-h), 55%, 72%);
 
-  --warning: hsl(var(--warning-h), 75%, 55%);
-  --warning-light: hsl(var(--warning-h), 35%, 16%);
-  --warning-text: hsl(var(--warning-h), 75%, 78%);
+  --warning: hsl(var(--warning-h), 80%, 55%);
+  --warning-light: hsl(var(--warning-h), 40%, 18%);
+  --warning-text: hsl(var(--warning-h), 80%, 72%);
 
-  --danger: hsl(var(--danger-h), 62%, 56%);
-  --danger-light: hsl(var(--danger-h), 35%, 16%);
-  --danger-text: hsl(var(--danger-h), 62%, 80%);
+  --danger: hsl(var(--danger-h), 65%, 58%);
+  --danger-light: hsl(var(--danger-h), 40%, 18%);
+  --danger-text: hsl(var(--danger-h), 65%, 75%);
 
-  --purple: hsl(var(--purple-h), 52%, 65%);
-  --purple-light: hsl(var(--purple-h), 35%, 16%);
-  --purple-text: hsl(var(--purple-h), 52%, 82%);
+  --purple: hsl(var(--purple-h), 55%, 65%);
+  --purple-light: hsl(var(--purple-h), 40%, 18%);
+  --purple-text: hsl(var(--purple-h), 55%, 78%);
 
   --shadow-sm: 0 1px 3px hsl(0, 0%, 0%, 0.3);
   --shadow-md: 0 4px 12px hsl(0, 0%, 0%, 0.35);
@@ -286,4 +272,146 @@ button:active {
 nav a:hover {
   background: var(--bg-muted) !important;
   color: var(--text-primary) !important;
+}
+
+/* ═══════════════════════════════════════
+   MOBILE — regras globais de responsividade
+   Aplicadas automaticamente em todas as páginas
+═══════════════════════════════════════ */
+
+/* Tabelas — scroll horizontal no mobile em vez de quebrar */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Fade visual nas bordas para indicar scroll */
+  mask-image: linear-gradient(to right, black 90%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
+}
+.table-wrap:has(table:not([data-no-mask])) {
+  /* só aplica se houver scroll */
+}
+
+@media (max-width: 767px) {
+  /* ── Formulários ── */
+  /* Todo grid de formulário vai para coluna única no mobile */
+  [data-form-grid] {
+    grid-template-columns: 1fr !important;
+  }
+  /* Campos que ocupavam a linha toda continuam ocupando */
+  [data-form-grid] [data-full] {
+    grid-column: 1 !important;
+  }
+
+  /* ── Cards em grid ── */
+  [data-grid="4"] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  [data-grid="3"] {
+    grid-template-columns: 1fr !important;
+  }
+  [data-grid="2"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Tabelas ── */
+  /* Esconder colunas menos importantes no mobile */
+  .hide-mobile {
+    display: none !important;
+  }
+  /* Texto menor nas tabelas para caber mais info */
+  table td,
+  table th {
+    font-size: 12px !important;
+    padding: 8px 6px !important;
+  }
+
+  /* ── Modais ── */
+  /* Modal ocupa quase a tela inteira no mobile */
+  [data-modal-box] {
+    width: 95vw !important;
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+    padding: 20px 16px !important;
+  }
+
+  /* ── Cards ── */
+  /* Padding menor nos cards mobile */
+  [data-card] {
+    padding: 14px !important;
+  }
+
+  /* ── Botões de ação em linha ── */
+  /* Grupos de botões viram coluna no mobile */
+  .btn-group-mobile {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  .btn-group-mobile > * {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* ── Pipeline kanban ── */
+  /* Scroll horizontal em vez de quebrar */
+  [data-kanban] {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-wrap: nowrap !important;
+  }
+  [data-kanban-col] {
+    min-width: 260px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* ── Gantt / Cronograma ── */
+  [data-gantt-header] {
+    grid-template-columns: repeat(3, 1fr) !important;
+    overflow-x: auto;
+  }
+
+  /* ── Typography ── */
+  h1 {
+    font-size: 18px !important;
+  }
+  h2 {
+    font-size: 15px !important;
+  }
+
+  /* ── Métricas superiores do dashboard ── */
+  [data-metrics] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  [data-metrics] [data-metric-value] {
+    font-size: 18px !important;
+  }
+}
+
+/* ── Tablet (768–1023px) ── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  [data-grid="4"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  [data-grid="3"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  [data-metrics] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* ── Touch targets mínimos (WCAG 2.5.5) ── */
+@media (pointer: coarse) {
+  button,
+  a[href],
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Exceção: botões inline pequenos em tabelas */
+  table button {
+    min-height: 32px;
+    min-width: 32px;
+  }
 }
