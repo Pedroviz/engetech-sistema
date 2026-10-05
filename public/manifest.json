@@ -1,0 +1,21 @@
+{
+  "name": "Engetech Soluções",
+  "short_name": "Engetech",
+  "description": "Sistema de Gestão de Obras",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1B5FA6",
+  "theme_color": "#1B5FA6",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

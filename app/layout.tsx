@@ -3,7 +3,13 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Engetech Soluções",
-  description: "Sistema de gestão de obras",
+  description: "Sistema de Gestão de Obras",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png", // ← ícone para iPhone
+  },
+  manifest: "/manifest.json", // ← PWA manifest
 };
 
 export default function RootLayout({
