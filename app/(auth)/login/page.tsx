@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Sun, Moon, HardHat } from "lucide-react";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -293,6 +294,20 @@ export default function LoginPage() {
           }}
         >
           Acesso restrito — Engetech Soluções LTDA
+        </p>
+
+        <p
+          style={{
+            textAlign: "center",
+            marginTop: 20,
+            fontSize: 14,
+            color: "#6b7280",
+          }}
+        >
+          Não tem conta?{" "}
+          <Link href="/cadastro" style={{ color: "#1B5FA6", fontWeight: 600 }}>
+            Criar conta grátis
+          </Link>
         </p>
       </div>
     </div>
