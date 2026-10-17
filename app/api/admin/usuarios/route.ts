@@ -10,6 +10,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
+    // User não tem relação direta com Obra no schema —
+    // a ligação é via tenantId, então buscamos a contagem separada
     const usuarios = await prisma.user.findMany({
       select: {
         id: true,
@@ -18,11 +20,25 @@ export async function GET(request: NextRequest) {
         empresa: true,
         role: true,
         createdAt: true,
-        _count: { select: { obras: true } },
       },
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(usuarios);
+    // Conta obras por tenantId (userId) para cada usuário
+    const obrasCount = await prisma.obra.groupBy({
+      by: ["tenantId"],
+      _count: { id: true },
+    });
+
+    const countMap = Object.fromEntries(
+      obrasCount.map((o) => [o.tenantId, o._count.id]),
+    );
+
+    const resultado = usuarios.map((u) => ({
+      ...u,
+      _count: { obras: countMap[u.id] ?? 0 },
+    }));
+
+    return NextResponse.json(resultado);
   });
 }
