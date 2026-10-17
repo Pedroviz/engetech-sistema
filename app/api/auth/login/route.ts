@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Senha incorreta" }, { status: 401 });
     }
 
-    const token = generateToken(user.id, user.email);
+    const token = generateToken(user.id, user.email, user.role);
     const isProduction = process.env.NODE_ENV === "production";
 
     const response = NextResponse.json({

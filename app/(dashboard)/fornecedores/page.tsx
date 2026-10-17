@@ -36,6 +36,42 @@ function formatMoney(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+// ─── Máscaras ────────────────────────────────────────────────────────────────
+function maskCNPJ(v: string) {
+  return v
+    .replace(/\D/g, "")
+    .slice(0, 14)
+    .replace(/^(\d{2})(\d)/, "$1.$2")
+    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1/$2")
+    .replace(/(\d{4})(\d)/, "$1-$2");
+}
+
+function maskTelefone(v: string) {
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 10) {
+    return d.replace(/^(\d{2})(\d)/, "($1) $2").replace(/(\d{4})(\d)/, "$1-$2");
+  }
+  return d
+    .replace(/^(\d{2})(\d)/, "($1) $2")
+    .replace(/(\d{1})(\d{4})(\d)/, "$1 $2-$3");
+}
+
+function maskCEP(v: string) {
+  return v
+    .replace(/\D/g, "")
+    .slice(0, 8)
+    .replace(/^(\d{5})(\d)/, "$1-$2");
+}
+
+function rawCNPJ(v: string) {
+  return v.replace(/\D/g, "");
+}
+function rawCEP(v: string) {
+  return v.replace(/\D/g, "");
+}
+
+// ─── Página ──────────────────────────────────────────────────────────────────
 export default function FornecedoresPage() {
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +80,10 @@ export default function FornecedoresPage() {
   const [filtro, setFiltro] = useState("todos");
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [form, setForm] = useState({
+  const [buscandoCNPJ, setBuscandoCNPJ] = useState(false);
+  const [buscandoCEP, setBuscandoCEP] = useState(false);
+
+  const formVazio = {
     razaoSocial: "",
     cnpj: "",
     categoria: "loja",
@@ -53,10 +92,12 @@ export default function FornecedoresPage() {
     email: "",
     vendedor: "",
     condicaoPagto: "À vista / PIX",
+    cep: "",
     endereco: "",
     cidade: "",
     materiais: "",
-  });
+  };
+  const [form, setForm] = useState(formVazio);
 
   async function loadData() {
     const res = await fetch("/api/fornecedores");
@@ -66,17 +107,93 @@ export default function FornecedoresPage() {
   }
 
   useEffect(() => {
-    async function fetchInitialData() {
-      await loadData();
+    let ativo = true;
+    async function buscar() {
+      const res = await fetch("/api/fornecedores");
+      const data = await res.json();
+      if (ativo) {
+        setFornecedores(Array.isArray(data) ? data : []);
+        setLoading(false);
+      }
     }
-
-    fetchInitialData();
+    buscar();
+    return () => {
+      ativo = false;
+    };
   }, []);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  function handleCNPJ(e: React.ChangeEvent<HTMLInputElement>) {
+    setForm((prev) => ({ ...prev, cnpj: maskCNPJ(e.target.value) }));
+  }
+
+  function handleTelefone(e: React.ChangeEvent<HTMLInputElement>) {
+    setForm((prev) => ({ ...prev, telefone: maskTelefone(e.target.value) }));
+  }
+
+  function handleCEP(e: React.ChangeEvent<HTMLInputElement>) {
+    setForm((prev) => ({ ...prev, cep: maskCEP(e.target.value) }));
+  }
+
+  // Auto-complete CNPJ via ReceitaWS
+  async function buscarCNPJ() {
+    const cnpj = rawCNPJ(form.cnpj);
+    if (cnpj.length !== 14) return;
+    setBuscandoCNPJ(true);
+    try {
+      const res = await fetch(`https://receitaws.com.br/v1/cnpj/${cnpj}`);
+      const data = await res.json();
+      if (data.status === "OK") {
+        setForm((prev) => ({
+          ...prev,
+          razaoSocial: data.nome || prev.razaoSocial,
+          email: data.email || prev.email,
+          telefone: data.telefone ? maskTelefone(data.telefone) : prev.telefone,
+          cep: data.cep ? maskCEP(data.cep) : prev.cep,
+          endereco: data.logradouro
+            ? `${data.logradouro}${data.numero ? ", " + data.numero : ""}${data.bairro ? " - " + data.bairro : ""}`
+            : prev.endereco,
+          cidade:
+            data.municipio && data.uf
+              ? `${data.municipio} / ${data.uf}`
+              : prev.cidade,
+        }));
+      }
+    } catch {
+      // silencia erro de rede
+    } finally {
+      setBuscandoCNPJ(false);
+    }
+  }
+
+  // Auto-complete CEP via ViaCEP
+  async function buscarCEP() {
+    const cep = rawCEP(form.cep);
+    if (cep.length !== 8) return;
+    setBuscandoCEP(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await res.json();
+      if (!data.erro) {
+        setForm((prev) => ({
+          ...prev,
+          endereco: `${data.logradouro}${data.bairro ? " - " + data.bairro : ""}`,
+          cidade:
+            data.localidade && data.uf
+              ? `${data.localidade} / ${data.uf}`
+              : prev.cidade,
+        }));
+      }
+    } catch {
+      // silencia erro de rede
+    } finally {
+      setBuscandoCEP(false);
+    }
   }
 
   function abrirEdicao(f: Fornecedor) {
@@ -90,6 +207,7 @@ export default function FornecedoresPage() {
       email: f.email || "",
       vendedor: f.vendedor || "",
       condicaoPagto: f.condicaoPagto || "À vista / PIX",
+      cep: "",
       endereco: "",
       cidade: f.cidade || "",
       materiais: f.materiais || "",
@@ -101,19 +219,7 @@ export default function FornecedoresPage() {
   function cancelarForm() {
     setShowForm(false);
     setEditandoId(null);
-    setForm({
-      razaoSocial: "",
-      cnpj: "",
-      categoria: "loja",
-      pedidoMinimo: "",
-      telefone: "",
-      email: "",
-      vendedor: "",
-      condicaoPagto: "À vista / PIX",
-      endereco: "",
-      cidade: "",
-      materiais: "",
-    });
+    setForm(formVazio);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -268,6 +374,43 @@ export default function FornecedoresPage() {
                 gap: "12px",
               }}
             >
+              {/* CNPJ com auto-complete */}
+              <div>
+                <label style={S.label}>CNPJ</label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    name="cnpj"
+                    value={form.cnpj}
+                    onChange={handleCNPJ}
+                    onBlur={buscarCNPJ}
+                    required
+                    placeholder="00.000.000/0001-00"
+                    style={{
+                      ...S.input,
+                      paddingRight: buscandoCNPJ ? "36px" : undefined,
+                    }}
+                  />
+                  {buscandoCNPJ && (
+                    <span
+                      style={{
+                        position: "absolute",
+                        right: 10,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        fontSize: 11,
+                        color: "var(--text-muted)",
+                      }}
+                    >
+                      ⏳
+                    </span>
+                  )}
+                </div>
+                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                  Preencha e saia do campo para auto-completar
+                </span>
+              </div>
+
+              {/* Razão Social */}
               <div>
                 <label style={S.label}>Razão Social</label>
                 <input
@@ -279,17 +422,8 @@ export default function FornecedoresPage() {
                   style={S.input}
                 />
               </div>
-              <div>
-                <label style={S.label}>CNPJ</label>
-                <input
-                  name="cnpj"
-                  value={form.cnpj}
-                  onChange={handleChange}
-                  required
-                  placeholder="00.000.000/0001-00"
-                  style={S.input}
-                />
-              </div>
+
+              {/* Categoria */}
               <div>
                 <label style={S.label}>Categoria</label>
                 <select
@@ -305,6 +439,8 @@ export default function FornecedoresPage() {
                   ))}
                 </select>
               </div>
+
+              {/* Pedido mínimo */}
               <div>
                 <label style={S.label}>Pedido Mínimo (R$)</label>
                 <input
@@ -316,16 +452,20 @@ export default function FornecedoresPage() {
                   style={S.input}
                 />
               </div>
+
+              {/* Telefone com máscara */}
               <div>
                 <label style={S.label}>Telefone / WhatsApp</label>
                 <input
                   name="telefone"
                   value={form.telefone}
-                  onChange={handleChange}
-                  placeholder="(85) 99999-0000"
+                  onChange={handleTelefone}
+                  placeholder="(85) 9 9999-0000"
                   style={S.input}
                 />
               </div>
+
+              {/* E-mail */}
               <div>
                 <label style={S.label}>E-mail</label>
                 <input
@@ -337,6 +477,8 @@ export default function FornecedoresPage() {
                   style={S.input}
                 />
               </div>
+
+              {/* Vendedor */}
               <div>
                 <label style={S.label}>Vendedor responsável</label>
                 <input
@@ -347,6 +489,8 @@ export default function FornecedoresPage() {
                   style={S.input}
                 />
               </div>
+
+              {/* Condição pagamento */}
               <div>
                 <label style={S.label}>Condição de pagamento</label>
                 <select
@@ -362,16 +506,52 @@ export default function FornecedoresPage() {
                   ))}
                 </select>
               </div>
+
+              {/* CEP com auto-complete */}
+              <div>
+                <label style={S.label}>CEP</label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    name="cep"
+                    value={form.cep}
+                    onChange={handleCEP}
+                    onBlur={buscarCEP}
+                    placeholder="00000-000"
+                    style={{
+                      ...S.input,
+                      paddingRight: buscandoCEP ? "36px" : undefined,
+                    }}
+                  />
+                  {buscandoCEP && (
+                    <span
+                      style={{
+                        position: "absolute",
+                        right: 10,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        fontSize: 11,
+                        color: "var(--text-muted)",
+                      }}
+                    >
+                      ⏳
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Endereço — preenchido pelo CEP */}
               <div>
                 <label style={S.label}>Endereço</label>
                 <input
                   name="endereco"
                   value={form.endereco}
                   onChange={handleChange}
-                  placeholder="Rua, número, bairro"
+                  placeholder="Preenchido pelo CEP"
                   style={S.input}
                 />
               </div>
+
+              {/* Cidade — preenchida pelo CEP ou CNPJ */}
               <div>
                 <label style={S.label}>Cidade / UF</label>
                 <input
@@ -382,6 +562,8 @@ export default function FornecedoresPage() {
                   style={S.input}
                 />
               </div>
+
+              {/* Materiais */}
               <div style={{ gridColumn: "1/-1" }}>
                 <label style={S.label}>Materiais fornecidos</label>
                 <input
@@ -393,6 +575,7 @@ export default function FornecedoresPage() {
                 />
               </div>
             </div>
+
             <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
               <button
                 type="submit"

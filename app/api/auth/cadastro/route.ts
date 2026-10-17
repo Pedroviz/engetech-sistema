@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
-import { SignJWT } from "jose";
+import { hashPassword, generateToken } from "@/lib/auth";
 import { z } from "zod";
 
 const prisma = new PrismaClient();
@@ -35,7 +34,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const hashedPassword = await bcrypt.hash(senha, 12);
+    const hashedPassword = await hashPassword(senha);
 
     const user = await prisma.user.create({
       data: {
@@ -47,21 +46,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const secret = new TextEncoder().encode(
-      process.env.JWT_SECRET || "fallback-secret-change-in-prod",
-    );
-
-    const token = await new SignJWT({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    })
-      .setProtectedHeader({ alg: "HS256" })
-      .setExpirationTime("7d")
-      .sign(secret);
+    const token = generateToken(user.id, user.email, user.role);
 
     const response = NextResponse.json({ ok: true });
-    response.cookies.set("token", token, {
+    response.cookies.set("engetech-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

@@ -1,5 +1,79 @@
 @import "tailwindcss";
 
+/* ─── Engetech — Mobile Design Tokens ───────────────────────────────────── */
+/* Cole no seu globals.css (ou importe no layout.tsx) */
+
+:root {
+  /* Palette */
+  --navy: #0d1b2e;
+  --navy-mid: #142236;
+  --navy-light: #1e3352;
+  --card: #ffffff;
+  --card-border: #e8edf3;
+  --fg: #0d1b2e;
+  --fg-2: #5a6a7e;
+  --fg-3: #8fa0b3;
+  --accent: #1a73e8;
+  --accent-dim: #e8f0fe;
+  --green: #17b26a;
+  --green-dim: #d1fae5;
+  --orange: #f59e0b;
+  --orange-dim: #fef3c7;
+  --red: #ef4444;
+  --red-dim: #fee2e2;
+  --purple: #7c3aed;
+  --purple-dim: #ede9fe;
+  --progress-track: #e2eaf3;
+  --bg: #f0f4f8;
+
+  /* Shape */
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 4px rgba(13, 27, 46, 0.07), 0 4px 16px rgba(13, 27, 46, 0.06);
+  --shadow-lg: 0 8px 32px rgba(13, 27, 46, 0.12);
+
+  /* Nav */
+  --nav-h: 64px;
+
+  /* Font */
+  --font: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --card: #1a2940;
+    --card-border: #253650;
+    --fg: #e8edf3;
+    --fg-2: #8fa0b3;
+    --fg-3: #5a6a7e;
+    --bg: #0d1b2e;
+    --accent-dim: #1a2e50;
+    --green-dim: #0a2e1c;
+    --orange-dim: #2e1e06;
+    --red-dim: #2e0a0a;
+    --purple-dim: #1e1030;
+    --progress-track: #1e3352;
+    --shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --card: #1a2940;
+  --card-border: #253650;
+  --fg: #e8edf3;
+  --fg-2: #8fa0b3;
+  --fg-3: #5a6a7e;
+  --bg: #0d1b2e;
+  --accent-dim: #1a2e50;
+  --green-dim: #0a2e1c;
+  --orange-dim: #2e1e06;
+  --red-dim: #2e0a0a;
+  --purple-dim: #1e1030;
+  --progress-track: #1e3352;
+  --shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
+  color-scheme: dark;
+}
+
 /* ═══════════════════════════════════════
    TOKENS HSL — TEMA CLARO
 ═══════════════════════════════════════ */
@@ -286,9 +360,6 @@ nav a:hover {
   /* Fade visual nas bordas para indicar scroll */
   mask-image: linear-gradient(to right, black 90%, transparent 100%);
   -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
-}
-.table-wrap:has(table:not([data-no-mask])) {
-  /* só aplica se houver scroll */
 }
 
 @media (max-width: 767px) {

@@ -19,6 +19,7 @@ export default function CadastroPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -212,10 +213,19 @@ export default function CadastroPage() {
                   icon={<Lock size={16} />}
                   label="Confirmar senha"
                   name="confirmarSenha"
-                  type="password"
+                  type={showConfirm ? "text" : "password"}
                   placeholder="Repita a senha"
                   value={form.confirmarSenha}
                   onChange={handleChange}
+                  suffix={
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm((v) => !v)}
+                      style={styles.eyeBtn}
+                    >
+                      {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  }
                 />
               </>
             )}

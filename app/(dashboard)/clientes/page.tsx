@@ -23,6 +23,25 @@ const classColors: Record<string, { bg: string; color: string }> = {
   novo: { bg: "#E1F5EE", color: "#085041" },
 };
 
+function maskTelefone(v: string) {
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 10)
+    return d.replace(/^(\d{2})(\d)/, "($1) $2").replace(/(\d{4})(\d)/, "$1-$2");
+  return d
+    .replace(/^(\d{2})(\d)/, "($1) $2")
+    .replace(/(\d{1})(\d{4})(\d)/, "$1 $2-$3");
+}
+
+const formVazio = {
+  nome: "",
+  segmento: "residencial",
+  classificacao: "novo",
+  whatsapp: "",
+  email: "",
+  clienteDesde: "",
+  observacoes: "",
+};
+
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,15 +49,7 @@ export default function ClientesPage() {
   const [saving, setSaving] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    nome: "",
-    segmento: "residencial",
-    classificacao: "novo",
-    whatsapp: "",
-    email: "",
-    clienteDesde: "",
-    observacoes: "",
-  });
+  const [form, setForm] = useState(formVazio);
 
   async function loadData() {
     const res = await fetch("/api/clientes");
@@ -48,16 +59,29 @@ export default function ClientesPage() {
   }
 
   useEffect(() => {
-    async function init() {
-      await loadData();
+    let ativo = true;
+    async function buscar() {
+      const res = await fetch("/api/clientes");
+      const data = await res.json();
+      if (ativo) {
+        setClientes(Array.isArray(data) ? data : []);
+        setLoading(false);
+      }
     }
-    void init();
+    buscar();
+    return () => {
+      ativo = false;
+    };
   }, []);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  function handleWhatsapp(e: React.ChangeEvent<HTMLInputElement>) {
+    setForm((prev) => ({ ...prev, whatsapp: maskTelefone(e.target.value) }));
   }
 
   function abrirEdicao(c: Cliente) {
@@ -78,15 +102,7 @@ export default function ClientesPage() {
   function cancelarForm() {
     setShowForm(false);
     setEditandoId(null);
-    setForm({
-      nome: "",
-      segmento: "residencial",
-      classificacao: "novo",
-      whatsapp: "",
-      email: "",
-      clienteDesde: "",
-      observacoes: "",
-    });
+    setForm(formVazio);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -121,7 +137,6 @@ export default function ClientesPage() {
 
   return (
     <div>
-      {/* Modal excluir */}
       {confirmDelete && (
         <div style={S.modal}>
           <div style={{ ...S.modalBox, width: "360px" }}>
@@ -150,7 +165,7 @@ export default function ClientesPage() {
                 onClick={() => excluir(confirmDelete)}
                 style={{
                   background: "var(--red)",
-                  color: "#7713e1",
+                  color: "#fff",
                   border: "none",
                   borderRadius: "8px",
                   padding: "9px 20px",
@@ -274,8 +289,8 @@ export default function ClientesPage() {
                 <input
                   name="whatsapp"
                   value={form.whatsapp}
-                  onChange={handleChange}
-                  placeholder="(85) 99999-0000"
+                  onChange={handleWhatsapp}
+                  placeholder="(85) 9 9999-0000"
                   style={S.input}
                 />
               </div>

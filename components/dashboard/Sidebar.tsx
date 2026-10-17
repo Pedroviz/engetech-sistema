@@ -17,6 +17,7 @@ import {
   X,
   Sun,
   Moon,
+  ShieldCheck,
 } from "lucide-react";
 import { useTheme } from "@/lib/useTheme";
 
@@ -156,11 +157,53 @@ export default function Sidebar({ user, onClose }: SidebarProps) {
             </Link>
           );
         })}
+
+        {/* Item Admin — visível só para admins */}
+        {user.role === "admin" &&
+          (() => {
+            const active = pathname.startsWith("/admin");
+            return (
+              <>
+                <div
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 600,
+                    color: "var(--text-muted)",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    padding: "12px 10px 4px",
+                  }}
+                >
+                  Administração
+                </div>
+                <Link
+                  href="/admin/usuarios"
+                  onClick={onClose}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "9px",
+                    padding: "8px 10px",
+                    borderRadius: "var(--radius-sm)",
+                    marginBottom: "1px",
+                    fontSize: "13px",
+                    fontWeight: active ? 600 : 400,
+                    color: active ? "#9333ea" : "var(--text-secondary)",
+                    background: active ? "#9333ea12" : "transparent",
+                    textDecoration: "none",
+                    transition: "all var(--transition)",
+                  }}
+                >
+                  <ShieldCheck size={16} strokeWidth={active ? 2.5 : 2} />
+                  Usuários
+                </Link>
+              </>
+            );
+          })()}
       </nav>
 
       {/* Rodapé */}
       <div style={{ padding: "12px", borderTop: "1px solid var(--border)" }}>
-        {/* Avatar + nome */}
         <div
           style={{
             display: "flex",
@@ -175,8 +218,9 @@ export default function Sidebar({ user, onClose }: SidebarProps) {
               width: "32px",
               height: "32px",
               borderRadius: "var(--radius-full)",
-              background: "var(--primary-light)",
-              color: "var(--primary)",
+              background:
+                user.role === "admin" ? "#9333ea22" : "var(--primary-light)",
+              color: user.role === "admin" ? "#9333ea" : "var(--primary)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -203,18 +247,17 @@ export default function Sidebar({ user, onClose }: SidebarProps) {
             <div
               style={{
                 fontSize: "10px",
-                color: "var(--text-muted)",
+                color: user.role === "admin" ? "#9333ea" : "var(--text-muted)",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
               }}
             >
-              {user.email}
+              {user.role === "admin" ? "👑 Admin" : user.email}
             </div>
           </div>
         </div>
 
-        {/* Botões */}
         <div style={{ display: "flex", gap: "6px" }}>
           <button
             onClick={toggle}

@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Inter } from "next/font/google";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font",
+});
 
 export const metadata: Metadata = {
   title: "Engetech Soluções",
@@ -7,9 +13,9 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png", // ← ícone para iPhone
+    apple: "/apple-touch-icon.png",
   },
-  manifest: "/manifest.json", // ← PWA manifest
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -19,7 +25,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body className={inter.variable}>{children}</body>
     </html>
   );
 }

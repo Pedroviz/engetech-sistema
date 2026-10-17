@@ -1,0 +1,85 @@
+/* MobileLayout.module.css */
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--bg);
+}
+
+.main {
+  flex: 1;
+  overflow-y: auto;
+  /* deixa espaço para a bottom nav */
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+}
+
+/* ── Bottom Navigation ─────────────────────────────── */
+.bottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-h);
+  background: var(--card);
+  border-top: 1px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 100;
+  /* eleva acima de modais comuns */
+}
+
+.navItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex: 1;
+  padding: 8px 0;
+  color: var(--fg-3);
+  text-decoration: none;
+  transition: color 0.15s;
+  border: none;
+  background: none;
+  font-family: var(--font);
+}
+
+.navItem span {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.navItemActive {
+  color: var(--accent);
+}
+
+/* ── FAB ─────────────────────────────────────────────── */
+.fabWrap {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+}
+
+.fab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+  transition: transform 0.12s, box-shadow 0.12s;
+  margin-bottom: 2px;
+}
+
+.fab:active {
+  transform: scale(0.93);
+  box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
+}

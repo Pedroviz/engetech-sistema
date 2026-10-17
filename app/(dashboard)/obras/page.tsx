@@ -117,14 +117,24 @@ export default function ObrasPage() {
   }
 
   useEffect(() => {
-    async function init() {
-      const { obras: obrasData, clientes: clientesData } =
-        await fetchObrasEClientes();
-      setObras(obrasData);
-      setClientes(clientesData);
-      setLoading(false);
+    let ativo = true;
+    async function buscar() {
+      const [obrasRes, clientesRes] = await Promise.all([
+        fetch("/api/obras"),
+        fetch("/api/clientes"),
+      ]);
+      const oData = await obrasRes.json();
+      const cData = await clientesRes.json();
+      if (ativo) {
+        setObras(Array.isArray(oData) ? oData : []);
+        setClientes(Array.isArray(cData) ? cData : []);
+        setLoading(false);
+      }
     }
-    init();
+    buscar();
+    return () => {
+      ativo = false;
+    };
   }, []);
 
   function handleChange(
@@ -378,20 +388,40 @@ export default function ObrasPage() {
               </div>
               <div>
                 <label style={S.label}>Cliente</label>
-                <select
-                  name="clienteId"
-                  value={form.clienteId}
-                  onChange={handleChange}
-                  required
-                  style={S.input}
-                >
-                  <option value="">Selecione...</option>
-                  {clientes.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.nome}
-                    </option>
-                  ))}
-                </select>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <select
+                    name="clienteId"
+                    value={form.clienteId}
+                    onChange={handleChange}
+                    required
+                    style={{ ...S.input, flex: 1 }}
+                  >
+                    <option value="">Selecione...</option>
+                    {clientes.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nome}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => window.open("/clientes?novo=1", "_blank")}
+                    title="Cadastrar novo cliente"
+                    style={{
+                      background: "var(--blue)",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "8px",
+                      padding: "0 14px",
+                      fontSize: "18px",
+                      cursor: "pointer",
+                      fontWeight: 700,
+                      flexShrink: 0,
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
               <div>
                 <label style={S.label}>Tipo</label>
