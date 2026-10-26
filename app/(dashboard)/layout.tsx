@@ -2,7 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { ClipboardList, Users, Truck, Package, HardHat, Zap, BookOpen } from "lucide-react";
+import {
+  ClipboardList,
+  Users,
+  Truck,
+  Package,
+  HardHat,
+  Zap,
+  BookOpen,
+} from "lucide-react";
 import Link from "next/link";
 
 type User = {
@@ -14,15 +22,31 @@ type User = {
 /* ── Ícones SVG inline ──────────────────────────────── */
 function IcoDashboard() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" />
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
     </svg>
   );
 }
 function IcoObras() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
       <rect x="3" y="3" width="18" height="18" rx="2" />
       <path d="M3 9h18M9 21V9" />
     </svg>
@@ -30,22 +54,44 @@ function IcoObras() {
 }
 function IcoFinanceiro() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
       <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
     </svg>
   );
 }
 function IcoLogout() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
       <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-      <polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
     </svg>
   );
 }
 function IcoBell() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
       <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
       <path d="M13.73 21a2 2 0 01-3.46 0" />
     </svg>
@@ -53,14 +99,29 @@ function IcoBell() {
 }
 function IcoSearch() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
   );
 }
 function IcoHome() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
       <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
       <polyline points="9 22 9 12 15 12 15 22" />
     </svg>
@@ -68,48 +129,72 @@ function IcoHome() {
 }
 function IcoPlus() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+    >
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   );
 }
 function IcoMais() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" />
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+      <circle cx="5" cy="12" r="1" />
     </svg>
   );
 }
 
 /* ── Nav desktop ────────────────────────────────────── */
 const DESKTOP_NAV = [
-  { href: "/dashboard",    label: "Dashboard",      icon: IcoDashboard },
-  { href: "/obras",        label: "Obras",          icon: IcoObras },
-  { href: "/orcamentos",   label: "Orçamentos",     icon: ClipboardList },
-  { href: "/clientes",     label: "Clientes",       icon: Users },
-  { href: "/fornecedores", label: "Fornecedores",   icon: Truck },
-  { href: "/financeiro",   label: "Financeiro",     icon: IcoFinanceiro },
-  { href: "/materiais",    label: "Materiais",      icon: Package },
-  { href: "/diaristas",    label: "Diaristas",      icon: HardHat },
-  { href: "/gastos",       label: "Gastos",         icon: Zap },
-  { href: "/rdo",          label: "Diário de Obra", icon: BookOpen },
-  { href: "/admin/usuarios", label: "Usuários",      icon: Users, adminOnly: true },
+  { href: "/dashboard", label: "Dashboard", icon: IcoDashboard },
+  { href: "/obras", label: "Obras", icon: IcoObras },
+  { href: "/orcamentos", label: "Orçamentos", icon: ClipboardList },
+  { href: "/clientes", label: "Clientes", icon: Users },
+  { href: "/fornecedores", label: "Fornecedores", icon: Truck },
+  { href: "/financeiro", label: "Financeiro", icon: IcoFinanceiro },
+  { href: "/materiais", label: "Materiais", icon: Package },
+  { href: "/diaristas", label: "Diaristas", icon: HardHat },
+  { href: "/gastos", label: "Gastos", icon: Zap },
+  { href: "/rdo", label: "Diário de Obra", icon: BookOpen },
+  { href: "/admin/usuarios", label: "Usuários", icon: Users, adminOnly: true },
 ];
 
 /* ── Nav mobile (bottom) ─────────────────────────────── */
 const MOBILE_NAV = [
-  { href: "/dashboard",  label: "Início",     icon: IcoHome },
-  { href: "/obras",      label: "Obras",      icon: IcoObras },
-  { href: "/obras",      label: "",           icon: IcoPlus, isFab: true },
+  { href: "/dashboard", label: "Início", icon: IcoHome },
+  { href: "/obras", label: "Obras", icon: IcoObras },
+  { href: "/obras", label: "", icon: IcoPlus, isFab: true },
   { href: "/financeiro", label: "Financeiro", icon: IcoFinanceiro },
-  { href: "#menu",       label: "Mais",       icon: IcoMais, isMenu: true },
+  { href: "#menu", label: "Mais", icon: IcoMais, isMenu: true },
 ];
 
 function getInitials(name: string) {
-  return name.split(" ").slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "?";
+  return (
+    name
+      .split(" ")
+      .slice(0, 2)
+      .map((p) => p[0])
+      .join("")
+      .toUpperCase() || "?"
+  );
 }
 
-/* ── Menu do avatar (nome, papel, tema e sair) ─────── */
+/* ── Menu do avatar ─────────────────────────────────── */
 function UserMenu({
   user,
   initials,
@@ -167,7 +252,10 @@ function UserMenu({
             type="button"
             role="menuitem"
             className="eng-user-item"
-            onClick={() => { setAberto(false); onToggleTema(); }}
+            onClick={() => {
+              setAberto(false);
+              onToggleTema();
+            }}
           >
             {tema === "dark" ? "Tema claro" : "Tema escuro"}
           </button>
@@ -175,7 +263,10 @@ function UserMenu({
             type="button"
             role="menuitem"
             className="eng-user-item danger"
-            onClick={() => { setAberto(false); onLogout(); }}
+            onClick={() => {
+              setAberto(false);
+              onLogout();
+            }}
           >
             Sair
           </button>
@@ -185,26 +276,46 @@ function UserMenu({
   );
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tooltip, setTooltip] = useState<string | null>(null);
-  const [tema, setTema] = useState<"light" | "dark">("light");
+  const [tema, setTema] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
+    const saved = localStorage.getItem("engetech-theme");
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+    return (saved ? saved === "dark" : prefersDark) ? "dark" : "light";
+  });
   const router = useRouter();
   const pathname = usePathname();
-  const navVisivel = DESKTOP_NAV.filter((i) => !i.adminOnly || user?.role === "admin");
+  const navVisivel = DESKTOP_NAV.filter(
+    (i) => !i.adminOnly || user?.role === "admin",
+  );
 
   useEffect(() => {
     const saved = localStorage.getItem("engetech-theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
     const dark = saved ? saved === "dark" : prefersDark;
-    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-    setTema(dark ? "dark" : "light");
+    document.documentElement.setAttribute(
+      "data-theme",
+      dark ? "dark" : "light",
+    );
 
     fetch("/api/auth/me")
       .then((r) => r.json())
-      .then((d) => { if (d.user) setUser(d.user); else router.push("/login"); })
+      .then((d) => {
+        if (d.user) setUser(d.user);
+        else router.push("/login");
+      })
       .catch(() => router.push("/login"))
       .finally(() => setLoading(false));
   }, [router]);
@@ -225,22 +336,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     try {
       localStorage.setItem("engetech-theme", proximo);
     } catch {
-      // Navegador sem localStorage: o tema vale só nesta página
+      // Navegador sem localStorage
     }
     setTema(proximo);
   }
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center",
-        justifyContent: "center", background: "#0d0d1a" }}>
-        <div style={{ fontSize: "14px", color: "rgba(255,255,255,0.45)" }}>Carregando…</div>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#0d0d1a",
+        }}
+      >
+        <div style={{ fontSize: "14px", color: "rgba(255,255,255,0.45)" }}>
+          Carregando…
+        </div>
       </div>
     );
   }
 
   const initials = getInitials(user?.name ?? "");
-  const today = new Date().toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
+  const today = new Date().toLocaleDateString("pt-BR", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+  });
 
   return (
     <>
@@ -480,12 +604,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         /* ── Conteúdo ────────────────────────────────── */
         .eng-content { flex: 1; padding: 24px; }
 
-        /* ══ Mobile overlay ══════════════════════════════ */
-        .eng-mobile-overlay {
-          display: none;
-          position: fixed; inset: 0; z-index: 300;
-          background: rgba(0,0,0,0.6);
-        }
+        /* ══ Mobile header ═══════════════════════════════ */
         .eng-mobile-header {
           display: none;
           height: 56px;
@@ -548,13 +667,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           backdrop-filter: blur(12px) saturate(180%);
         }
 
-        /* ── Mobile sidebar overlay ─────────────────── */
+        /* ── Mobile sidebar overlay (FORA do header) ── */
+        .eng-mob-overlay {
+          position: fixed; inset: 0; z-index: 400;
+          background: rgba(0,0,0,0.55);
+          animation: engFadeIn 0.18s ease;
+        }
+        @keyframes engFadeIn {
+          from { opacity: 0; } to { opacity: 1; }
+        }
         .eng-mob-sidebar {
           position: fixed; top: 0; left: 0; bottom: 0;
-          width: 240px; background: var(--sidebar-bg);
+          width: 260px; background: var(--sidebar-bg);
           border-right: 1px solid rgba(255,255,255,0.08);
-          z-index: 400; padding: 20px 0;
+          z-index: 401; padding: 20px 0;
           display: flex; flex-direction: column; gap: 4px;
+          overflow-y: auto;
+          animation: engSlideIn 0.22s cubic-bezier(.4,0,.2,1);
+        }
+        @keyframes engSlideIn {
+          from { transform: translateX(-100%); }
+          to   { transform: translateX(0); }
         }
         .eng-mob-nav-item {
           display: flex; align-items: center; gap: 12px;
@@ -577,17 +710,73 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
         .eng-mob-logo-text { font-size: 14px; font-weight: 700; color: #fff; }
         .eng-mob-logo-text span { color: #6366f1; }
+        .eng-mob-sidebar-spacer { flex: 1; }
+        .eng-mob-logout {
+          display: flex; align-items: center; gap: 12px;
+          padding: 11px 20px; margin-top: 4px;
+          color: rgba(255,255,255,0.35);
+          border: none; background: none; cursor: pointer;
+          font-family: inherit; font-size: 14px; font-weight: 500;
+          border-top: 1px solid rgba(255,255,255,0.07);
+          transition: background 0.15s, color 0.15s;
+          width: 100%;
+        }
+        .eng-mob-logout:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
       `}</style>
+
+      {/* ════ MOBILE SIDEBAR OVERLAY (fora do header) ════ */}
+      {sidebarOpen && (
+        <>
+          <div
+            className="eng-mob-overlay"
+            onClick={() => setSidebarOpen(false)}
+          />
+          <nav className="eng-mob-sidebar">
+            <div className="eng-mob-logo">
+              <div className="eng-mob-logo-icon">M</div>
+              <div className="eng-mob-logo-text">
+                <span>Mão</span> na Obra
+              </div>
+            </div>
+            {navVisivel.map((item) => {
+              const isActive =
+                pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`eng-mob-nav-item${isActive ? " active" : ""}`}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <item.icon />
+                  {item.label}
+                </Link>
+              );
+            })}
+            <div className="eng-mob-sidebar-spacer" />
+            <button
+              className="eng-mob-logout"
+              onClick={() => {
+                setSidebarOpen(false);
+                handleLogout();
+              }}
+            >
+              <IcoLogout />
+              Sair
+            </button>
+          </nav>
+        </>
+      )}
 
       {/* ════ SHELL ════════════════════════════════════ */}
       <div className="eng-shell">
-
         {/* ── Sidebar desktop ──────────────────────── */}
         <aside className="eng-sidebar">
           <div className="eng-logo">M</div>
 
           {navVisivel.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+            const isActive =
+              pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
                 key={item.href}
@@ -607,14 +796,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           <div className="eng-sidebar-spacer" />
 
-          <button className="eng-logout-btn" onClick={handleLogout} title="Sair">
+          <button
+            className="eng-logout-btn"
+            onClick={handleLogout}
+            title="Sair"
+          >
             <IcoLogout />
           </button>
         </aside>
 
         {/* ── Main ─────────────────────────────────── */}
         <div className="eng-main">
-
           {/* Topbar desktop */}
           <header className="eng-topbar">
             <div className="eng-search-wrap">
@@ -637,32 +829,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Header mobile */}
           <div className="eng-mobile-header">
-            {sidebarOpen && (
-              <div className="eng-mobile-overlay" onClick={() => setSidebarOpen(false)}>
-                <nav className="eng-mob-sidebar" onClick={(e) => e.stopPropagation()}>
-                  <div className="eng-mob-logo">
-                    <div className="eng-mob-logo-icon">M</div>
-                    <div className="eng-mob-logo-text"><span>Mão</span> na Obra</div>
-                  </div>
-                  {navVisivel.map((item) => {
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={`eng-mob-nav-item${isActive ? " active" : ""}`}
-                        onClick={() => setSidebarOpen(false)}
-                      >
-                        <item.icon />
-                        {item.label}
-                      </Link>
-                    );
-                  })}
-                </nav>
-              </div>
-            )}
-            <button className="eng-hamburger" onClick={() => setSidebarOpen(true)}>☰</button>
-            <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--fg-1)" }}>
+            <button
+              className="eng-hamburger"
+              onClick={() => setSidebarOpen(true)}
+            >
+              ☰
+            </button>
+            <span
+              style={{
+                fontSize: "15px",
+                fontWeight: 700,
+                color: "var(--fg-1)",
+              }}
+            >
               <span style={{ color: "#6366f1" }}>Mão</span> na Obra
             </span>
             <UserMenu
@@ -682,7 +861,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* ── Bottom Nav mobile ──────────────────────── */}
       <nav className="eng-bottom-nav">
         {MOBILE_NAV.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const isActive =
+            pathname === item.href || pathname.startsWith(item.href + "/");
           if (item.isMenu) {
             return (
               <button
@@ -699,7 +879,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           if (item.isFab) {
             return (
               <Link key="fab" href={item.href} className="eng-fab-wrap">
-                <span className="eng-fab"><item.icon /></span>
+                <span className="eng-fab">
+                  <item.icon />
+                </span>
               </Link>
             );
           }
