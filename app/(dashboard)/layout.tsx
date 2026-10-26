@@ -178,9 +178,34 @@ const DESKTOP_NAV = [
 const MOBILE_NAV = [
   { href: "/dashboard", label: "Início", icon: IcoHome },
   { href: "/obras", label: "Obras", icon: IcoObras },
-  { href: "/obras", label: "", icon: IcoPlus, isFab: true },
+  { href: "#fab", label: "", icon: IcoPlus, isFab: true },
   { href: "/financeiro", label: "Financeiro", icon: IcoFinanceiro },
   { href: "#menu", label: "Mais", icon: IcoMais, isMenu: true },
+];
+
+/* ── Ações rápidas do FAB ────────────────────────────── */
+const FAB_ACTIONS = [
+  { href: "/obras/nova", label: "Nova Obra", emoji: "🏗️", cor: "#6366f1" },
+  {
+    href: "/orcamentos/novo",
+    label: "Novo Orçamento",
+    emoji: "📋",
+    cor: "#8b5cf6",
+  },
+  {
+    href: "/clientes/novo",
+    label: "Novo Cliente",
+    emoji: "👤",
+    cor: "#0ea5e9",
+  },
+  { href: "/gastos/novo", label: "Novo Gasto", emoji: "💸", cor: "#ef4444" },
+  { href: "/rdo/novo", label: "Novo Diário", emoji: "📝", cor: "#f97316" },
+  {
+    href: "/diaristas/novo",
+    label: "Nova Diarista",
+    emoji: "👷",
+    cor: "#17b26a",
+  },
 ];
 
 function getInitials(name: string) {
@@ -284,6 +309,7 @@ export default function DashboardLayout({
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [fabOpen, setFabOpen] = useState(false);
   const [tooltip, setTooltip] = useState<string | null>(null);
   const [tema, setTema] = useState<"light" | "dark">(() => {
     if (typeof window === "undefined") return "light";
@@ -722,6 +748,56 @@ export default function DashboardLayout({
           width: 100%;
         }
         .eng-mob-logout:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
+
+        /* ── FAB quick-actions drawer ──────────────────── */
+        .eng-fab-overlay {
+          position: fixed; inset: 0; z-index: 150;
+          background: rgba(0,0,0,0.45);
+          animation: engFadeIn 0.15s ease;
+        }
+        .eng-fab-drawer {
+          position: fixed;
+          bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+          left: 50%; transform: translateX(-50%);
+          width: calc(100% - 32px); max-width: 360px;
+          background: var(--card-bg, #fff);
+          border: 1px solid var(--card-border, #e2e8f0);
+          border-radius: 20px;
+          padding: 8px;
+          z-index: 151;
+          box-shadow: 0 -4px 32px rgba(0,0,0,0.18);
+          animation: engSlideUp 0.22s cubic-bezier(.4,0,.2,1);
+        }
+        @keyframes engSlideUp {
+          from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+          to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+        }
+        .eng-fab-drawer-title {
+          font-size: 11px; font-weight: 700; color: var(--fg-3);
+          text-transform: uppercase; letter-spacing: 0.06em;
+          padding: 8px 12px 6px;
+        }
+        .eng-fab-grid {
+          display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
+          padding: 4px;
+        }
+        .eng-fab-action {
+          display: flex; flex-direction: column; align-items: center;
+          gap: 6px; padding: 14px 8px;
+          border-radius: 14px;
+          background: var(--page-bg, #f1f5f9);
+          border: none; cursor: pointer; text-decoration: none;
+          transition: transform 0.1s, background 0.15s;
+          font-family: inherit;
+        }
+        .eng-fab-action:active { transform: scale(0.94); }
+        .eng-fab-action-emoji { font-size: 22px; line-height: 1; }
+        .eng-fab-action-label {
+          font-size: 11px; font-weight: 600;
+          color: var(--fg-2); text-align: center; line-height: 1.3;
+        }
+        /* FAB rotaciona quando aberto */
+        .eng-fab-btn-open { transform: rotate(45deg) !important; }
       `}</style>
 
       {/* ════ MOBILE SIDEBAR OVERLAY (fora do header) ════ */}
@@ -858,6 +934,29 @@ export default function DashboardLayout({
         </div>
       </div>
 
+      {/* ── FAB quick-actions drawer ───────────────── */}
+      {fabOpen && (
+        <>
+          <div className="eng-fab-overlay" onClick={() => setFabOpen(false)} />
+          <div className="eng-fab-drawer">
+            <div className="eng-fab-drawer-title">Criar novo</div>
+            <div className="eng-fab-grid">
+              {FAB_ACTIONS.map((a) => (
+                <Link
+                  key={a.href}
+                  href={a.href}
+                  className="eng-fab-action"
+                  onClick={() => setFabOpen(false)}
+                >
+                  <span className="eng-fab-action-emoji">{a.emoji}</span>
+                  <span className="eng-fab-action-label">{a.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
       {/* ── Bottom Nav mobile ──────────────────────── */}
       <nav className="eng-bottom-nav">
         {MOBILE_NAV.map((item) => {
@@ -878,11 +977,27 @@ export default function DashboardLayout({
           }
           if (item.isFab) {
             return (
-              <Link key="fab" href={item.href} className="eng-fab-wrap">
-                <span className="eng-fab">
+              <button
+                key="fab"
+                type="button"
+                className="eng-fab-wrap"
+                onClick={() => setFabOpen((v) => !v)}
+                style={{
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <span
+                  className="eng-fab"
+                  style={{
+                    transition: "transform 0.2s",
+                    transform: fabOpen ? "rotate(45deg)" : "none",
+                  }}
+                >
                   <item.icon />
                 </span>
-              </Link>
+              </button>
             );
           }
           return (
