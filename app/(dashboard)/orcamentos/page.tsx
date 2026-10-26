@@ -2,6 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDroppable,
+  useDraggable,
+  type DragStartEvent,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Cliente {
   id: string;
@@ -60,6 +72,187 @@ const inp: React.CSSProperties = {
   outline: "none",
 };
 
+/* ════════════════════════════════════════════════════════
+   CARD ARRASTÁVEL — usado dentro das colunas e no overlay
+════════════════════════════════════════════════════════ */
+function OrcamentoCard({
+  orc,
+  onConverter,
+  dragging = false,
+}: {
+  orc: Orcamento;
+  onConverter?: (o: Orcamento) => void;
+  dragging?: boolean;
+}) {
+  return (
+    <div
+      style={{
+        background: "#fff",
+        border: dragging ? "1px solid #185FA5" : "1px solid #e0e0e0",
+        borderRadius: "8px",
+        padding: "10px",
+        boxShadow: dragging
+          ? "0 12px 28px rgba(24,95,165,0.25)"
+          : "0 1px 2px rgba(0,0,0,0.04)",
+        cursor: dragging ? "grabbing" : "grab",
+        userSelect: "none",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "11px",
+          fontWeight: 600,
+          marginBottom: "2px",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {orc.cliente?.nome}
+      </div>
+      <div
+        style={{
+          fontSize: "12px",
+          color: "#185FA5",
+          fontWeight: 600,
+        }}
+      >
+        {formatMoney(orc.valor)}
+      </div>
+      <div
+        style={{
+          fontSize: "10px",
+          color: "#aaa",
+          marginTop: "2px",
+        }}
+      >
+        {orc.numero}
+      </div>
+      {orc.status === "aprovado" && onConverter && (
+        <button
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => onConverter(orc)}
+          style={{
+            marginTop: "6px",
+            width: "100%",
+            background: "#185FA5",
+            color: "#fff",
+            border: "none",
+            borderRadius: "5px",
+            padding: "4px 0",
+            fontSize: "10px",
+            fontWeight: 600,
+            cursor: "pointer",
+            fontFamily: "inherit",
+          }}
+        >
+          🏗️ Converter em Obra
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ── Wrapper que torna o card arrastável (dnd-kit) ──────── */
+function DraggableCard({
+  orc,
+  onConverter,
+}: {
+  orc: Orcamento;
+  onConverter: (o: Orcamento) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({ id: orc.id, data: { status: orc.status } });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.35 : 1,
+    marginBottom: "6px",
+    transition: isDragging ? undefined : "opacity 150ms ease",
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+      <OrcamentoCard orc={orc} onConverter={onConverter} />
+    </div>
+  );
+}
+
+/* ── Coluna droppable ────────────────────────────────────── */
+function PipelineColumn({
+  status,
+  itens,
+  onConverter,
+}: {
+  status: string;
+  itens: Orcamento[];
+  onConverter: (o: Orcamento) => void;
+}) {
+  const st = STATUS_STYLE[status];
+  const { setNodeRef, isOver } = useDroppable({ id: status });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        background: isOver ? "#EAF2FB" : "#f8f8f6",
+        borderRadius: "8px",
+        padding: "10px",
+        minHeight: "120px",
+        outline: isOver ? "2px dashed #185FA5" : "2px dashed transparent",
+        outlineOffset: "-2px",
+        transition: "background 160ms ease, outline-color 160ms ease",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "10px",
+          fontWeight: 600,
+          color: "#888",
+          textTransform: "uppercase",
+          letterSpacing: "0.04em",
+          marginBottom: "8px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <span>{st.label}</span>
+        <span
+          style={{
+            background: st.bg,
+            color: st.color,
+            borderRadius: "8px",
+            padding: "1px 6px",
+            fontSize: "10px",
+          }}
+        >
+          {itens.length}
+        </span>
+      </div>
+
+      {itens.length === 0 ? (
+        <div
+          style={{
+            fontSize: "11px",
+            color: "#ccc",
+            textAlign: "center",
+            padding: "16px 0",
+            border: "1.5px dashed #e4e4e0",
+            borderRadius: "6px",
+          }}
+        >
+          Solte aqui
+        </div>
+      ) : (
+        itens.map((o) => (
+          <DraggableCard key={o.id} orc={o} onConverter={onConverter} />
+        ))
+      )}
+    </div>
+  );
+}
+
 export default function OrcamentosPage() {
   const router = useRouter();
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
@@ -72,6 +265,7 @@ export default function OrcamentosPage() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [convertendo, setConvertendo] = useState<Orcamento | null>(null);
   const [erroConversao, setErroConversao] = useState("");
+  const [activeOrc, setActiveOrc] = useState<Orcamento | null>(null);
 
   const [form, setForm] = useState({
     numero: "",
@@ -90,6 +284,14 @@ export default function OrcamentosPage() {
     orcamentoMat: "",
     orcamentoMO: "",
   });
+
+  // Sensor com pequeno delay de ativação para não disparar
+  // drag sem querer ao clicar/tocar em botões dentro do card
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 },
+    }),
+  );
 
   async function loadData() {
     const [oRes, cRes] = await Promise.all([
@@ -181,6 +383,26 @@ export default function OrcamentosPage() {
     loadData();
   }
 
+  // Atualização otimista: move o card na UI instantaneamente,
+  // chama a API em segundo plano, e reverte se der erro.
+  async function moverStatusOtimista(id: string, novoStatus: string) {
+    setOrcamentos((prev) =>
+      prev.map((o) => (o.id === id ? { ...o, status: novoStatus } : o)),
+    );
+
+    try {
+      const res = await fetch(`/api/orcamentos/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: novoStatus }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      // reverte em caso de falha
+      loadData();
+    }
+  }
+
   function abrirConversao(orc: Orcamento) {
     setErroConversao("");
     setFormConversao({
@@ -217,6 +439,26 @@ export default function OrcamentosPage() {
     setSaving(false);
     loadData();
     router.push("/obras");
+  }
+
+  function handleDragStart(e: DragStartEvent) {
+    const orc = orcamentos.find((o) => o.id === e.active.id);
+    setActiveOrc(orc || null);
+  }
+
+  function handleDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    setActiveOrc(null);
+    if (!over) return;
+
+    const orcId = String(active.id);
+    const novoStatus = String(over.id);
+    const atual = orcamentos.find((o) => o.id === orcId);
+
+    if (!atual || atual.status === novoStatus) return;
+    if (!STATUS_LIST.includes(novoStatus)) return;
+
+    moverStatusOtimista(orcId, novoStatus);
   }
 
   const porStatus = STATUS_LIST.reduce(
@@ -554,7 +796,7 @@ export default function OrcamentosPage() {
         })}
       </div>
 
-      {/* Pipeline visual */}
+      {/* Pipeline visual — arrastável estilo Trello */}
       <div
         style={{
           background: "#fff",
@@ -588,117 +830,37 @@ export default function OrcamentosPage() {
             <strong style={{ color: "#1D9E75" }}>{taxaConversao}%</strong>
           </span>
         </div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(5,1fr)",
-            gap: "8px",
-          }}
+
+        <DndContext
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
         >
-          {STATUS_LIST.map((s) => {
-            const st = STATUS_STYLE[s];
-            const itens = porStatus[s] || [];
-            return (
-              <div
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(5,1fr)",
+              gap: "8px",
+            }}
+          >
+            {STATUS_LIST.map((s) => (
+              <PipelineColumn
                 key={s}
-                style={{
-                  background: "#f8f8f6",
-                  borderRadius: "8px",
-                  padding: "10px",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: 600,
-                    color: "#888",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                    marginBottom: "8px",
-                  }}
-                >
-                  {st.label}
-                </div>
-                {itens.length === 0 ? (
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#ccc",
-                      textAlign: "center",
-                      padding: "10px 0",
-                    }}
-                  >
-                    vazio
-                  </div>
-                ) : (
-                  itens.map((o) => (
-                    <div
-                      key={o.id}
-                      style={{
-                        background: "#fff",
-                        border: "1px solid #e0e0e0",
-                        borderRadius: "6px",
-                        padding: "8px",
-                        marginBottom: "6px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: "11px",
-                          fontWeight: 600,
-                          marginBottom: "2px",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {o.cliente?.nome}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          color: "#185FA5",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {formatMoney(o.valor)}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "10px",
-                          color: "#aaa",
-                          marginTop: "2px",
-                        }}
-                      >
-                        {o.numero}
-                      </div>
-                      {o.status === "aprovado" && (
-                        <button
-                          onClick={() => abrirConversao(o)}
-                          style={{
-                            marginTop: "6px",
-                            width: "100%",
-                            background: "#185FA5",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: "5px",
-                            padding: "4px 0",
-                            fontSize: "10px",
-                            fontWeight: 600,
-                            cursor: "pointer",
-                            fontFamily: "inherit",
-                          }}
-                        >
-                          🏗️ Converter em Obra
-                        </button>
-                      )}
-                    </div>
-                  ))
-                )}
+                status={s}
+                itens={porStatus[s] || []}
+                onConverter={abrirConversao}
+              />
+            ))}
+          </div>
+
+          <DragOverlay dropAnimation={{ duration: 180, easing: "ease" }}>
+            {activeOrc ? (
+              <div style={{ width: "100%" }}>
+                <OrcamentoCard orc={activeOrc} dragging />
               </div>
-            );
-          })}
-        </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       </div>
 
       {/* Filtros + botão */}

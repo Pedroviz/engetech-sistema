@@ -1,10 +1,11 @@
 import { z } from "zod";
+import { STATUS_OBRA } from "@/lib/dashboard/status";
 
 export const obraSchema = z.object({
   centroCusto: z.string().min(1, "Centro de custo obrigatório"),
   clienteId: z.string().min(1, "Cliente obrigatório"),
   tipo: z.enum(["residencial", "comercial", "industrial"]),
-  status: z.enum(["andamento", "execucao", "finalizada", "pausada"]),
+  status: z.enum(STATUS_OBRA),
   inicio: z.string().min(1),
   previsaoFim: z.string().min(1),
   contrato: z.number().positive(),
