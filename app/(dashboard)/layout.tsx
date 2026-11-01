@@ -273,6 +273,15 @@ function UserMenu({
               {user?.role === "admin" ? "Administrador" : "Usuário"}
             </em>
           </div>
+          <Link
+            href="/perfil"
+            role="menuitem"
+            className="eng-user-item"
+            style={{ textDecoration: "none" }}
+            onClick={() => setAberto(false)}
+          >
+            Meu perfil
+          </Link>
           <button
             type="button"
             role="menuitem"
