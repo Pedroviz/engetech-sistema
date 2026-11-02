@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { gerarRelatorioPDF } from "@/lib/gerarRelatorioPDF";
+import { Share2, Copy, Check, MessageCircle, X } from "lucide-react";
 import * as S from "@/lib/styles";
 
 interface Cliente {
   id: string;
   nome: string;
+  telefone?: string; // Adicionado para integração com WhatsApp
 }
+
 interface Obra {
   id: string;
   centroCusto: string;
@@ -69,6 +72,228 @@ function Badge({
   );
 }
 
+// --- Componente Modal do Portal do Cliente ---
+function ObraPortalModal({
+  obraId,
+  nomeObra,
+  clienteTelefone,
+  isOpen,
+  onClose,
+}: {
+  obraId: string;
+  nomeObra: string;
+  clienteTelefone?: string;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const [loading, setLoading] = useState(true);
+  const [portalUrl, setPortalUrl] = useState("");
+  const [copiado, setCopiado] = useState(false);
+
+  // Declarada ANTES do useEffect para evitar o erro de imutabilidade/hoisting
+  const gerarLink = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/obras/${obraId}/portal`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPortalUrl(data.url);
+      }
+    } catch (err) {
+      console.error("Falha ao obter link do portal", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [obraId]);
+
+  useEffect(() => {
+    if (isOpen && !portalUrl) {
+      queueMicrotask(() => {
+        void gerarLink();
+      });
+    }
+  }, [isOpen, portalUrl, gerarLink]);
+
+  function handleCopiar() {
+    if (!portalUrl) return;
+    navigator.clipboard.writeText(portalUrl);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2500);
+  }
+
+  function handleWhatsApp() {
+    if (!portalUrl) return;
+    const msg = encodeURIComponent(
+      `Olá! Acompanhe o andamento diário da sua obra "${nomeObra}" em tempo real através do link exclusivo da Engetech Soluções:\n\n${portalUrl}`,
+    );
+    const tel = clienteTelefone ? clienteTelefone.replace(/\D/g, "") : "";
+    const zapUrl = tel
+      ? `https://wa.me/55${tel}?text=${msg}`
+      : `https://wa.me/?text=${msg}`;
+    window.open(zapUrl, "_blank");
+  }
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        backgroundColor: "rgba(0,0,0,0.6)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 500,
+        backdropFilter: "blur(4px)",
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "var(--bg-card, #1e1e24)",
+          border: "1px solid var(--border, #333)",
+          borderRadius: "12px",
+          width: "90%",
+          maxWidth: "520px",
+          padding: "24px",
+          color: "var(--text-primary, #fff)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "16px",
+          }}
+        >
+          <h3
+            style={{
+              fontSize: "1.2rem",
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <Share2 size={20} color="#6366f1" /> Portal do Cliente
+          </h3>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              color: "inherit",
+              cursor: "pointer",
+            }}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <p
+          style={{
+            fontSize: "0.9rem",
+            color: "var(--text-secondary, #a1a1aa)",
+            marginBottom: "20px",
+          }}
+        >
+          Partilhe este link com o cliente da obra <strong>{nomeObra}</strong>.
+          Ele poderá acompanhar etapas, fotografias e relatórios sem necessitar
+          de senha.
+        </p>
+
+        {loading ? (
+          <p style={{ textAlign: "center", padding: "16px" }}>
+            A gerar link de acesso seguro...
+          </p>
+        ) : (
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "var(--bg-secondary, #141416)",
+                padding: "10px 14px",
+                borderRadius: "8px",
+                border: "1px solid var(--border, #27272a)",
+              }}
+            >
+              <input
+                type="text"
+                readOnly
+                value={portalUrl}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "inherit",
+                  width: "100%",
+                  outline: "none",
+                  fontSize: "0.85rem",
+                }}
+              />
+              <button
+                onClick={handleCopiar}
+                title="Copiar link"
+                style={{
+                  background: copiado ? "#10b981" : "#6366f1",
+                  border: "none",
+                  color: "#fff",
+                  borderRadius: "6px",
+                  padding: "6px 12px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  fontSize: "0.8rem",
+                  fontWeight: 500,
+                }}
+              >
+                {copiado ? <Check size={16} /> : <Copy size={16} />}
+                {copiado ? "Copiado!" : "Copiar"}
+              </button>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                justifyContent: "flex-end",
+                marginTop: "8px",
+              }}
+            >
+              <button
+                type="button"
+                onClick={handleWhatsApp}
+                style={{
+                  backgroundColor: "#25D366",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "10px 16px",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontSize: "0.9rem",
+                }}
+              >
+                <MessageCircle size={18} /> Enviar via WhatsApp
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// --- Página Principal ---
 export default function ObrasPage() {
   const router = useRouter();
   const [obras, setObras] = useState<Obra[]>([]);
@@ -80,8 +305,12 @@ export default function ObrasPage() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [gerandoPDF, setGerandoPDF] = useState<string | null>(null);
 
-  // Estado adicionado para o link do portal
-  const [linkGerado, setLinkGerado] = useState<string | null>(null);
+  // Estado para o Modal do Portal
+  const [portalModalData, setPortalModalData] = useState<{
+    id: string;
+    nome: string;
+    telefone?: string;
+  } | null>(null);
 
   const [form, setForm] = useState({
     centroCusto: "",
@@ -119,15 +348,10 @@ export default function ObrasPage() {
   useEffect(() => {
     let ativo = true;
     async function buscar() {
-      const [obrasRes, clientesRes] = await Promise.all([
-        fetch("/api/obras"),
-        fetch("/api/clientes"),
-      ]);
-      const oData = await obrasRes.json();
-      const cData = await clientesRes.json();
+      const { obras: oData, clientes: cData } = await fetchObrasEClientes();
       if (ativo) {
-        setObras(Array.isArray(oData) ? oData : []);
-        setClientes(Array.isArray(cData) ? cData : []);
+        setObras(oData);
+        setClientes(cData);
         setLoading(false);
       }
     }
@@ -209,25 +433,6 @@ export default function ObrasPage() {
     loadData();
   }
 
-  // Função adicionada para gerar o link do portal
-  async function gerarLinkPortal(obra: Obra) {
-    const res = await fetch(`/api/obras/${obra.id}/portal`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ativo: true,
-        titulo: `Reforma — ${obra.cliente?.nome}`,
-      }),
-    });
-    const data = await res.json();
-    if (data.token) {
-      const url = `${window.location.origin}/portal/${data.token}`;
-      navigator.clipboard.writeText(url);
-      setLinkGerado(url);
-      setTimeout(() => setLinkGerado(null), 4000);
-    }
-  }
-
   async function gerarPDF(obra: Obra) {
     setGerandoPDF(obra.id);
     try {
@@ -265,7 +470,7 @@ export default function ObrasPage() {
   }
 
   if (loading)
-    return <div style={{ color: "var(--text-muted)" }}>Carregando...</div>;
+    return <div style={{ color: "var(--text-muted)" }}>A carregar...</div>;
 
   return (
     <div>
@@ -321,6 +526,17 @@ export default function ObrasPage() {
         </div>
       )}
 
+      {/* Modal do Portal do Cliente */}
+      {portalModalData && (
+        <ObraPortalModal
+          obraId={portalModalData.id}
+          nomeObra={portalModalData.nome}
+          clienteTelefone={portalModalData.telefone}
+          isOpen={!!portalModalData}
+          onClose={() => setPortalModalData(null)}
+        />
+      )}
+
       {/* Topo */}
       <div
         style={{
@@ -331,7 +547,7 @@ export default function ObrasPage() {
         }}
       >
         <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
-          {obras.length} obra(s) cadastrada(s)
+          {obras.length} obra(s) registada(s)
         </p>
         <button
           onClick={() => {
@@ -358,7 +574,7 @@ export default function ObrasPage() {
               color: "var(--text-primary)",
             }}
           >
-            {editandoId ? "✏️ Editar Obra" : "Cadastrar Nova Obra"}
+            {editandoId ? "✏️ Editar Obra" : "Registar Nova Obra"}
           </h3>
           <form onSubmit={handleSubmit}>
             <div
@@ -406,7 +622,7 @@ export default function ObrasPage() {
                   <button
                     type="button"
                     onClick={() => window.open("/clientes?novo=1", "_blank")}
-                    title="Cadastrar novo cliente"
+                    title="Registar novo cliente"
                     style={{
                       background: "var(--blue)",
                       color: "#fff",
@@ -519,10 +735,10 @@ export default function ObrasPage() {
                 style={{ ...S.btnPrimary, opacity: saving ? 0.6 : 1 }}
               >
                 {saving
-                  ? "Salvando..."
+                  ? "A guardar..."
                   : editandoId
-                    ? "Salvar alterações"
-                    : "Salvar Obra"}
+                    ? "Guardar alterações"
+                    : "Guardar Obra"}
               </button>
               <button
                 type="button"
@@ -541,7 +757,7 @@ export default function ObrasPage() {
         <h3 style={S.cardTitle}>Todas as Obras</h3>
         {obras.length === 0 ? (
           <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-            Nenhuma obra cadastrada.
+            Nenhuma obra registada.
           </p>
         ) : (
           <table style={S.table}>
@@ -632,9 +848,14 @@ export default function ObrasPage() {
                           📊 Gantt
                         </button>
 
-                        {/* Botão Portal adicionado aqui */}
                         <button
-                          onClick={() => gerarLinkPortal(obra)}
+                          onClick={() =>
+                            setPortalModalData({
+                              id: obra.id,
+                              nome: obra.cliente?.nome || "Obra",
+                              telefone: obra.cliente?.telefone,
+                            })
+                          }
                           style={{
                             background: "#EEEDFE",
                             color: "#3C3489",
@@ -709,27 +930,6 @@ export default function ObrasPage() {
           </table>
         )}
       </div>
-
-      {/* Toast de confirmação adicionado antes do </div> final */}
-      {linkGerado && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: "24px",
-            right: "24px",
-            background: "#1D9E75",
-            color: "#fff",
-            padding: "12px 18px",
-            borderRadius: "10px",
-            fontSize: "13px",
-            fontWeight: 500,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
-            zIndex: 9999,
-          }}
-        >
-          ✅ Link copiado! Cole no WhatsApp do cliente.
-        </div>
-      )}
     </div>
   );
 }

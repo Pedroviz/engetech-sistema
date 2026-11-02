@@ -1,75 +1,98 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ token: string }> },
+  request: Request,
+  context: { params: Promise<{ token: string }> },
 ) {
   try {
-    const { token } = await params;
+    const { token } = await context.params;
 
-    const obra = await prisma.obra.findUnique({
-      where: { portalToken: token },
-      include: {
-        cliente: { select: { nome: true } },
+    if (!token) {
+      return NextResponse.json({ error: "Token inválido" }, { status: 400 });
+    }
+
+    // Busca a obra via token sem expor informações financeiras da construtora
+    const obra = await prisma.obra.findFirst({
+      where: {
+        portalToken: token,
+      },
+      select: {
+        id: true,
+        nome: true,
+        endereco: true,
+        status: true,
+        dataInicio: true,
+        previsaoTermino: true,
+        cliente: {
+          select: {
+            nome: true,
+          },
+        },
         etapas: {
-          orderBy: { ordem: "asc" },
-          include: { subtarefas: true },
+          select: {
+            id: true,
+            nome: true,
+            ordem: true,
+            status: true,
+            dataInicio: true,
+            dataFim: true,
+            subtarefas: {
+              select: {
+                id: true,
+                titulo: true,
+                concluida: true,
+              },
+            },
+          },
+          orderBy: {
+            ordem: "asc",
+          },
         },
         rdos: {
-          orderBy: { data: "desc" },
-          take: 5,
           select: {
             id: true,
             data: true,
             clima: true,
-            anotacoes: true,
-            atividades: {
-              select: { descricao: true, percentual: true, status: true },
-            },
+            atividades: true,
+            fotos: true,
           },
+          orderBy: {
+            data: "desc",
+          },
+          take: 15, // Últimos 15 relatórios
         },
       },
     });
 
-    if (!obra || !obra.portalAtivo) {
+    if (!obra) {
       return NextResponse.json(
-        { error: "Portal não encontrado" },
+        { error: "Obra não localizada ou link expirado." },
         { status: 404 },
       );
     }
 
-    // IMPORTANTE: nunca expor custos, margem, fornecedores ou pagamentos
-    const dadosPublicos = {
-      titulo: obra.portalTitulo || `Obra ${obra.centroCusto}`,
-      cliente: obra.cliente?.nome,
-      tipo: obra.tipo,
-      status: obra.status,
-      endereco: obra.endereco,
-      inicio: obra.inicio,
-      previsaoFim: obra.previsaoFim,
-      etapas: obra.etapas.map((e) => ({
-        nome: e.nome,
-        status: e.status,
-        percentual: e.percentual,
-        inicioPlano: e.inicioPlano,
-        fimPlano: e.fimPlano,
-        subtarefas: e.subtarefas.map((s) => ({
-          nome: s.nome,
-          status: s.status,
-          percentual: s.percentual,
-        })),
-      })),
-      diario: obra.rdos.map((r) => ({
-        data: r.data,
-        clima: r.clima,
-        resumo: r.anotacoes,
-        atividades: r.atividades,
-      })),
-    };
+    // Calcula porcentagem global de conclusão baseada nas subtarefas/etapas
+    const todasSubtarefas = obra.etapas.flatMap((e) => e.subtarefas);
+    const concluidas = todasSubtarefas.filter((s) => s.concluida).length;
+    const progresso =
+      todasSubtarefas.length > 0
+        ? Math.round((concluidas / todasSubtarefas.length) * 100)
+        : obra.status === "CONCLUIDA"
+          ? 100
+          : 0;
 
-    return NextResponse.json(dadosPublicos);
-  } catch {
-    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+    return NextResponse.json({
+      obra: {
+        ...obra,
+        progresso,
+      },
+    });
+  } catch (error) {
+    console.error("Erro na rota pública do portal:", error);
+    return NextResponse.json(
+      { error: "Falha ao buscar dados da obra." },
+      { status: 500 },
+    );
   }
 }
