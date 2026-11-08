@@ -872,6 +872,23 @@ export default function ObrasPage() {
                         </button>
 
                         <button
+                          onClick={() => router.push(`/obras/${obra.id}/dre`)}
+                          style={{
+                            background: "#EEF2FF",
+                            color: "#4F46E5",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "4px 9px",
+                            fontSize: "11px",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                          }}
+                        >
+                          📈 DRE
+                        </button>
+
+                        <button
                           onClick={() => abrirEdicao(obra)}
                           style={{
                             background: "#FAEEDA",

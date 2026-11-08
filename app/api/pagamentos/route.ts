@@ -1,14 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const obraId = searchParams.get("obraId");
+
+    // ✅ Filtra por obraId se ele for fornecido na URL
     const pagamentos = await prisma.pagamento.findMany({
+      where: obraId ? { obraId } : undefined,
       include: { diarista: true, obra: true },
       orderBy: { createdAt: "desc" },
     });
+
     return NextResponse.json(pagamentos);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }
@@ -29,7 +35,7 @@ export async function POST(request: NextRequest) {
       include: { diarista: true, obra: true },
     });
     return NextResponse.json(pagamento, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }

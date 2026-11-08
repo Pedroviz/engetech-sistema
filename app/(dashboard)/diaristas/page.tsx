@@ -45,7 +45,7 @@ export default function DiaristasPage() {
   });
   const [formP, setFormP] = useState({
     diaristaId: "",
-    obraId: "",
+    obraId: "",       // ← agora o usuário escolhe livremente
     diasTrab: "",
     valorDia: "",
     status: "pendente",
@@ -87,11 +87,17 @@ export default function DiaristasPage() {
   async function handleSubmitPagamento(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    const d = diaristas.find((d) => d.id === formP.diaristaId);
+    // ✅ Envia obraId escolhido pelo usuário no formulário
     await fetch("/api/pagamentos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...formP, obraId: d?.obra?.id || formP.obraId }),
+      body: JSON.stringify({
+        diaristaId: formP.diaristaId,
+        obraId: formP.obraId,
+        diasTrab: formP.diasTrab,
+        valorDia: formP.valorDia,
+        status: formP.status,
+      }),
     });
     setFormP({
       diaristaId: "",
@@ -117,6 +123,7 @@ export default function DiaristasPage() {
 
   return (
     <div>
+      {/* ── KPIs ── */}
       <div
         style={{
           display: "grid",
@@ -161,6 +168,7 @@ export default function DiaristasPage() {
         ))}
       </div>
 
+      {/* ── Tabs ── */}
       <div
         style={{
           display: "flex",
@@ -197,6 +205,7 @@ export default function DiaristasPage() {
         ))}
       </div>
 
+      {/* ── Botão abrir form ── */}
       <div
         style={{
           display: "flex",
@@ -219,6 +228,7 @@ export default function DiaristasPage() {
         </button>
       </div>
 
+      {/* ── Form: Novo Diarista ── */}
       {showForm && tab === "diaristas" && (
         <div style={{ ...S.card, marginBottom: "16px" }}>
           <h3
@@ -290,7 +300,7 @@ export default function DiaristasPage() {
                 />
               </div>
               <div>
-                <label style={S.label}>Obra</label>
+                <label style={S.label}>Obra (vínculo principal)</label>
                 <select
                   value={formD.obraId}
                   onChange={(e) =>
@@ -323,6 +333,7 @@ export default function DiaristasPage() {
         </div>
       )}
 
+      {/* ── Form: Registrar Pagamento ── */}
       {showForm && tab === "pagamentos" && (
         <div style={{ ...S.card, marginBottom: "16px" }}>
           <h3
@@ -343,6 +354,7 @@ export default function DiaristasPage() {
                 gap: "12px",
               }}
             >
+              {/* Diarista */}
               <div>
                 <label style={S.label}>Diarista</label>
                 <select
@@ -361,6 +373,28 @@ export default function DiaristasPage() {
                   ))}
                 </select>
               </div>
+
+              {/* ✅ NOVO: Obra / Centro de Custo */}
+              <div>
+                <label style={S.label}>Obra / Centro de Custo</label>
+                <select
+                  value={formP.obraId}
+                  onChange={(e) =>
+                    setFormP((p) => ({ ...p, obraId: e.target.value }))
+                  }
+                  required
+                  style={S.input}
+                >
+                  <option value="">Selecione a obra...</option>
+                  {obras.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.centroCusto} — {o.cliente?.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Dias trabalhados */}
               <div>
                 <label style={S.label}>Dias trabalhados</label>
                 <input
@@ -374,6 +408,8 @@ export default function DiaristasPage() {
                   style={S.input}
                 />
               </div>
+
+              {/* Valor por dia */}
               <div>
                 <label style={S.label}>Valor por dia (R$)</label>
                 <input
@@ -387,6 +423,8 @@ export default function DiaristasPage() {
                   style={S.input}
                 />
               </div>
+
+              {/* Status */}
               <div>
                 <label style={S.label}>Status</label>
                 <select
@@ -401,6 +439,8 @@ export default function DiaristasPage() {
                 </select>
               </div>
             </div>
+
+            {/* Preview do total */}
             {formP.diasTrab && formP.valorDia && (
               <div
                 style={{
@@ -417,6 +457,7 @@ export default function DiaristasPage() {
                 {formatMoney(Number(formP.diasTrab) * Number(formP.valorDia))}
               </div>
             )}
+
             <button
               type="submit"
               disabled={saving}
@@ -432,6 +473,7 @@ export default function DiaristasPage() {
         </div>
       )}
 
+      {/* ── Tabela: Diaristas ── */}
       {tab === "diaristas" && (
         <div style={S.card}>
           {diaristas.length === 0 ? (
@@ -464,6 +506,7 @@ export default function DiaristasPage() {
         </div>
       )}
 
+      {/* ── Tabela: Pagamentos ── */}
       {tab === "pagamentos" && (
         <div style={S.card}>
           {pagamentos.length === 0 ? (
