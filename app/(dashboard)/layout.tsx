@@ -477,7 +477,13 @@ export default function DashboardLayout({
           top: 0; left: 0; bottom: 0;
           z-index: 200;
           gap: 4px;
-        }
+          overflow-y: auto;      /* ← adicionar */
+  scrollbar-width: none; /* ← esconde a scrollbar no Firefox */
+}
+.eng-sidebar::-webkit-scrollbar {
+  display: none; /* ← esconde a scrollbar no Chrome/Safari */
+}
+        
         .eng-logo {
           width: 36px; height: 36px; border-radius: 10px;
           background: linear-gradient(135deg,#6366f1,#8b5cf6);

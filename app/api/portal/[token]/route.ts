@@ -9,89 +9,79 @@ export async function GET(
     const { token } = await context.params;
 
     if (!token) {
-      return NextResponse.json({ error: "Token inválido" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Token não fornecido" },
+        { status: 400 },
+      );
     }
 
-    // Busca a obra via token sem expor informações financeiras da construtora
-    const obra = await prisma.obra.findFirst({
-      where: {
-        portalToken: token,
-      },
-      select: {
-        id: true,
-        nome: true,
-        endereco: true,
-        status: true,
-        dataInicio: true,
-        previsaoTermino: true,
-        cliente: {
-          select: {
-            nome: true,
-          },
-        },
+    // Busca a obra através do portalToken único
+    const obra = await prisma.obra.findUnique({
+      where: { portalToken: token },
+      include: {
+        cliente: true,
         etapas: {
-          select: {
-            id: true,
-            nome: true,
-            ordem: true,
-            status: true,
-            dataInicio: true,
-            dataFim: true,
-            subtarefas: {
-              select: {
-                id: true,
-                titulo: true,
-                concluida: true,
-              },
-            },
+          include: {
+            subtarefas: true,
           },
-          orderBy: {
-            ordem: "asc",
-          },
+          orderBy: { ordem: "asc" },
         },
         rdos: {
-          select: {
-            id: true,
-            data: true,
-            clima: true,
+          include: {
             atividades: true,
             fotos: true,
           },
-          orderBy: {
-            data: "desc",
-          },
-          take: 15, // Últimos 15 relatórios
+          orderBy: { data: "desc" },
+          take: 10,
         },
       },
     });
 
-    if (!obra) {
+    if (!obra || !obra.portalAtivo) {
       return NextResponse.json(
-        { error: "Obra não localizada ou link expirado." },
+        { error: "Portal inválido ou desativado" },
         { status: 404 },
       );
     }
 
-    // Calcula porcentagem global de conclusão baseada nas subtarefas/etapas
-    const todasSubtarefas = obra.etapas.flatMap((e) => e.subtarefas);
-    const concluidas = todasSubtarefas.filter((s) => s.concluida).length;
-    const progresso =
-      todasSubtarefas.length > 0
-        ? Math.round((concluidas / todasSubtarefas.length) * 100)
-        : obra.status === "CONCLUIDA"
-          ? 100
-          : 0;
+    // Formata o objeto para coincidir com a interface `Portal` da página
+    const dadosPortal = {
+      titulo: obra.portalTitulo || `Obra — ${obra.centroCusto}`,
+      cliente: obra.cliente?.nome || "Cliente Engetech",
+      tipo: obra.tipo,
+      status: obra.status,
+      endereco: obra.endereco || "",
+      inicio: obra.inicio.toISOString(),
+      previsaoFim: obra.previsaoFim.toISOString(),
+      etapas: obra.etapas.map((etapa) => ({
+        nome: etapa.nome,
+        status: etapa.status,
+        percentual: etapa.percentual,
+        inicioPlano: etapa.inicioPlano.toISOString(),
+        fimPlano: etapa.fimPlano.toISOString(),
+        subtarefas: etapa.subtarefas.map((sub) => ({
+          nome: sub.nome,
+          status: sub.status,
+          percentual: sub.percentual,
+        })),
+      })),
+      diario: obra.rdos.map((rdo) => ({
+        data: rdo.data.toISOString(),
+        clima: rdo.clima,
+        resumo: rdo.anotacoes || "",
+        atividades: rdo.atividades.map((ativ) => ({
+          descricao: ativ.descricao,
+          percentual: ativ.percentual,
+          status: ativ.status,
+        })),
+      })),
+    };
 
-    return NextResponse.json({
-      obra: {
-        ...obra,
-        progresso,
-      },
-    });
+    return NextResponse.json(dadosPortal);
   } catch (error) {
-    console.error("Erro na rota pública do portal:", error);
+    console.error("Erro ao carregar portal do cliente:", error);
     return NextResponse.json(
-      { error: "Falha ao buscar dados da obra." },
+      { error: "Erro interno ao carregar portal" },
       { status: 500 },
     );
   }
